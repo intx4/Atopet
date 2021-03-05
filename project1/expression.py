@@ -91,7 +91,8 @@ class Secret(Expression):
         self.value = value
         super().__init__(id)
 
-
+    def __add__(self, other):
+        return Secret(self.id + b'&' + other.id)
     def __repr__(self):
         return (
             f"{self.__class__.__name__}({self.value if self.value is not None else ''})"
