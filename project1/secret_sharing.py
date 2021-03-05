@@ -30,11 +30,13 @@ class Share:
 
 def share_secret(secret: int, num_shares: int) -> List[Share]:
     """Generate secret shares."""
+    #s = sum_0^N-1(s_i)
     raise NotImplementedError("You need to implement this method.")
 
 
 def reconstruct_secret(shares: List[Share]) -> int:
     """Reconstruct the secret from shares."""
+    #always additive
     raise NotImplementedError("You need to implement this method.")
 
 

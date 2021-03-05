@@ -39,6 +39,8 @@ class TrustedParamGenerator:
         """
         Retrieve a triplet of shares for a given client_id.
         """
+        #For a given operation id, we should generate number_of_clients*3 values s.t [a]*[b] = [c]
+         
         raise NotImplementedError("You need to implement this method.")
 
     # Feel free to add as many methods as you want.
