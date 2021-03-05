@@ -12,6 +12,7 @@ MODIFY THIS FILE.
 import base64
 import random
 from typing import Optional
+from enum import Enum
 
 
 ID_BYTES = 4
@@ -22,6 +23,10 @@ def gen_id() -> bytes:
         random.getrandbits(8) for _ in range(ID_BYTES)
     )
     return base64.b64encode(id_bytes)
+
+
+class OperandType(Enum):
+    ADD =  'add'
 
 
 class Expression:
@@ -92,7 +97,8 @@ class Secret(Expression):
         super().__init__(id)
 
     def __add__(self, other):
-        return Secret(self.id + b'&' + other.id)
+        return Operands(self, other, OperandType.ADD)
+
     def __repr__(self):
         return (
             f"{self.__class__.__name__}({self.value if self.value is not None else ''})"
@@ -102,4 +108,19 @@ class Secret(Expression):
     # Feel free to add as many methods as you like.
 
 
+
+class Operands(Expression):
+    def __init__(self, a: Expression, b: Expression, operand_type):
+        self.a = a
+        self.b = b
+        self.operand_type = operand_type
+        super().__init__()
+
+    def __add__(self, other):
+        return Operands(self, other, OperandType.ADD)
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}({self.operand_type.name})"
+        )
 # Feel free to add as many classes as you like.
