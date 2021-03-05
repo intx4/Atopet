@@ -31,7 +31,7 @@ class Expression:
 
     def __init__(
             self,
-            id: Optional[bytes] = None
+            id: Optional[bytes] = None # this should be a unique identifier for the expression (I suppose that multiple expressions can be run paralelly in the network)
         ):
         # If ID is not given, then generate one.
         if id is None:
@@ -74,7 +74,7 @@ class Scalar(Expression):
 
 
     def __hash__(self):
-        return
+        return hash(self.id)
 
 
     # Feel free to add as many methods as you like.
