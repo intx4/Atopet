@@ -11,7 +11,7 @@ MODIFY THIS FILE.
 
 import base64
 import random
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 
 
@@ -25,7 +25,7 @@ def gen_id() -> bytes:
     return base64.b64encode(id_bytes)
 
 
-class OperandType(Enum):
+class OperationType(Enum):
     ADD =  'add'
     MUL = 'mul'
     SUB = 'sub'
@@ -56,16 +56,14 @@ class Expression:
     def __mul__(self, other):
         raise NotImplementedError("You need to implement this method.")
 
-    def isScalar(self):
-        raise NotImplementedError("You need to implement this method.")
-    def isSecret(self):
-        raise NotImplementedError("You need to implement this method.")
-    def isOperand(self):
-        raise NotImplementedError("You need to implement this method.")
-    def retOperands(self):
-        raise NotImplementedError("You need to implement this method.")
-    def retOperation(self):
-        raise NotImplementedError("You need to implement this method.")
+    def is_scalar(self):
+        return False
+
+    def is_secret(self):
+        return False
+
+    def is_operation(self):
+        return False
 
     def __hash__(self):
         return hash(self.id)
@@ -93,14 +91,8 @@ class Scalar(Expression):
     def __hash__(self):
         return hash(self.id)
 
-    def isScalar(self):
+    def is_scalar(self):
         return True
-
-    def isSecret(self):
-        return False
-
-    def isOperand(self):
-        return False
 
 class Secret(Expression):
     """Term representing a secret finite field value (variable)."""
@@ -114,26 +106,24 @@ class Secret(Expression):
         super().__init__(id)
 
     def __add__(self, other):
-        return Operands(self, other, OperandType.ADD)
+        return Operation(self, other, OperationType.ADD)
 
     def __mul__(self, other):
-        return Operands(self, other, OperandType.MUL)
+        return Operation(self, other, OperationType.MUL)
 
     def __sub__(self, other):
-        return Operands(self, other, OperandType.SUB)
+        return Operation(self, other, OperationType.SUB)
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}({self.value if self.value is not None else ''})"
+            f"{self.__class__.__name__}({self.value if self.value is not None else 'Null'})"
         )
-    def isScalar(self):
-        return False
-    def isSecret(self):
-        return True
-    def isOperand(self):
-        return False
 
-class Operands(Expression):
+    def is_secret(self):
+        return True
+
+
+class Operation(Expression):
     """Term representing an operation between basic expression (i.e. sum between two secrets). It's a node of a tree"""
     def __init__(self, a: Expression, b: Expression, operand_type):
         self.a = a
@@ -142,28 +132,27 @@ class Operands(Expression):
         super().__init__()
 
     def __add__(self, other):
-        return Operands(self, other, OperandType.ADD)
+        return Operation(self, other, OperationType.ADD)
 
     def __mul__(self, other):
-        return Operands(self, other, OperandType.MUL)
+        return Operation(self, other, OperationType.MUL)
 
     def __sub__(self, other):
-        return Operands(self, other, OperandType.SUB)
+        return Operation(self, other, OperationType.SUB)
 
     def __repr__(self):
         return (
             f"{self.__class__.__name__}({self.operand_type.name})"
         )
-    #Helper function for descending the ast
-    def isScalar(self):
-        return False
-    def isSecret(self):
-        return False
-    def isOperand(self):
+    # Helper functions for descending the tree
+
+    def is_operation(self):
         return True
-    def retOperands(self):
+
+    def get_operands(self) -> List[Expression]:
         return [self.a, self.b]
-    def retOperation(self):
+
+    def get_operation_type(self):
         return self.operand_type
 
 # Feel free to add as many classes as you like.

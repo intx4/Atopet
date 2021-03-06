@@ -12,11 +12,12 @@ from typing import (
 )
 
 from communication import Communication
-from secret_sharing import(
-    share_secret,
+from secret_sharing import (
     Share,
+    share_secret,
     FIELD
 )
+
 from random import randint
 from math import sqrt, floor
 
@@ -59,6 +60,7 @@ class TrustedParamGenerator:
             return triplet.get_shares(id)
 
     # Feel free to add as many methods as you want.
+
 
 class BeaverTriplet:
     """Element defining a Beaver Triplet, containing the three elements (a, b, c), the num of parties, and their shares"""

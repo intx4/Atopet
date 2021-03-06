@@ -18,7 +18,6 @@ from communication import Communication
 from expression import *
 from protocol import ProtocolSpec
 from secret_sharing import(
-    reconstruct_secret,
     share_secret,
     Share,
 )
@@ -49,7 +48,7 @@ class SMCParty:
         self.comm = Communication(server_host, server_port, client_id)
 
         self.client_id = client_id
-        self.identifier = self.client_identifier(self.client_id, self.protocol_spec.participant_ids)
+        self.index = self.client_identifier(self.client_id, self.protocol_spec.participant_ids)
         self.protocol_spec = protocol_spec
         self.value_dict = value_dict
 
@@ -66,25 +65,21 @@ class SMCParty:
         """
         The method the client use to do the SMC.
         """
-
-        #First of all, the party should send the shares of her secret to the other parties
-
+        # First of all, the party should send the shares of her secret to the other parties
         label, secret = self.value_dict.items()
         parties = self.protocol_spec.participant_ids
 
         shares = share_secret(secret, len(parties))
         for p, s in zip(parties, shares):
-            self.comm.send_private_message(p, label + "_share", s.toJson())
+            self.comm.send_private_message(p, label + "_share", s.to_json())
 
         return self.process_expression(self.protocol_spec.expr).value
-    # Suggestion: To process expressions, make use of the *visitor pattern* like so:
-    def process_expression(
-            self,
-            expr: Expression
-        ) -> Share:
+
+    def process_expression(self, expr: Expression) -> Share:
+        # Suggestion: To process expressions, make use of the *visitor pattern* like so:
         # if expr is an addition operation:
         #     ...
-        if (expr.isOperand()):
+        if expr.is_operation():
             share = self.process_operand(self, expr)
 
         # if expr is a multiplication operation:
@@ -101,20 +96,16 @@ class SMCParty:
         # further.
         pass
 
-    def process_operand(
-            self,
-            op: Operands
-    ) -> Share:
-        exprs = op.retOperands()
+    def process_operand(self, op: Operation) -> Share:
+        operands = op.get_operands()
+        shareA = self.process_expression(self, operands[0])
+        shareB = self.process_expression(self, operands[1])
 
-        shareA = self.process_expression(self, exprs[0])
-        shareB = self.process_expression(self, exprs[1])
-
-        if (op.operand_type == OperandType.ADD):
+        if (op.operand_type == OperationType.ADD):
             return Share( (shareA.__add__(shareB)).value, shareA.num_shares)
-        if (op.operand_type == OperandType.MUL):
+        if (op.operand_type == OperationType.MUL):
             return Share( (shareA.__mul__(shareB)).value, shareA.num_shares)
-        if (op.operand_type == OperandType.SUB):
+        if (op.operand_type == OperationType.SUB):
             return Share( (shareA.__sub__(shareB)).value, shareA.num_shares)
 
 
