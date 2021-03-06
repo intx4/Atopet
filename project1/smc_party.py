@@ -71,6 +71,7 @@ class SMCParty:
         ) -> Share:
         # if expr is an addition operation:
         #     ...
+        expr.__repr__()
 
         # if expr is a multiplication operation:
         #     ...

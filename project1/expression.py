@@ -27,6 +27,8 @@ def gen_id() -> bytes:
 
 class OperandType(Enum):
     ADD =  'add'
+    MUL = 'mul'
+    SUB = 'sub'
 
 
 class Expression:
@@ -81,9 +83,14 @@ class Scalar(Expression):
     def __hash__(self):
         return hash(self.id)
 
+    def isScalar(self):
+        return True
 
-    # Feel free to add as many methods as you like.
+    def isSecret(self):
+        return False
 
+    def isOperand(self):
+        return False
 
 class Secret(Expression):
     """Term representing a secret finite field value (variable)."""
@@ -99,17 +106,25 @@ class Secret(Expression):
     def __add__(self, other):
         return Operands(self, other, OperandType.ADD)
 
+    def __mul__(self, other):
+        return Operands(self, other, OperandType.MUL)
+
+    def __sub__(self, other):
+        return Operands(self, other, OperandType.SUB)
+
     def __repr__(self):
         return (
             f"{self.__class__.__name__}({self.value if self.value is not None else ''})"
         )
-
-
-    # Feel free to add as many methods as you like.
-
-
+    def isScalar(self):
+        return False
+    def isSecret(self):
+        return True
+    def isOperand(self):
+        return False
 
 class Operands(Expression):
+    """Term representing an operation between basic expression (i.e. sum between two secrets). It's a node of a tree"""
     def __init__(self, a: Expression, b: Expression, operand_type):
         self.a = a
         self.b = b
@@ -119,8 +134,26 @@ class Operands(Expression):
     def __add__(self, other):
         return Operands(self, other, OperandType.ADD)
 
+    def __mul__(self, other):
+        return Operands(self, other, OperandType.MUL)
+
+    def __sub__(self, other):
+        return Operands(self, other, OperandType.SUB)
+
     def __repr__(self):
         return (
             f"{self.__class__.__name__}({self.operand_type.name})"
         )
+    #Helper function for descending the ast
+    def isScalar(self):
+        return False
+    def isSecret(self):
+        return False
+    def isOperand(self):
+        return True
+    def retOperands(self):
+        return [self.a, self.b]
+    def retOperation(self):
+        return self.operand_type
+
 # Feel free to add as many classes as you like.
