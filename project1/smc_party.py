@@ -49,17 +49,34 @@ class SMCParty:
         self.comm = Communication(server_host, server_port, client_id)
 
         self.client_id = client_id
+        self.identifier = self.client_identifier(self.client_id, self.protocol_spec.participant_ids)
         self.protocol_spec = protocol_spec
         self.value_dict = value_dict
 
+    """This will be useful in the ADD-K protocol. If my indentifier is 0, then I will add the constant"""
+    def client_identifier(self, my_id, other_ids):
+        i = 0
+        for id in other_ids:
+            if id == my_id:
+                return i
+            else:
+                i += 1
 
     def run(self) -> int:
         """
         The method the client use to do the SMC.
         """
-        raise NotImplementedError("You need to implement this method.")
 
+        #First of all, the party should send the shares of her secret to the other parties
 
+        label, secret = self.value_dict.items()
+        parties = self.protocol_spec.participant_ids
+
+        shares = share_secret(secret, len(parties))
+        for p, s in zip(parties, shares):
+            self.comm.send_private_message(p, label + "_share", s.toJson())
+
+        return self.process_expression(self.protocol_spec.expr).value
     # Suggestion: To process expressions, make use of the *visitor pattern* like so:
     def process_expression(
             self,
@@ -94,7 +111,11 @@ class SMCParty:
         shareB = self.process_expression(self, exprs[1])
 
         if (op.operand_type == OperandType.ADD):
-            return shareA
+            return Share( (shareA.__add__(shareB)).value, shareA.num_shares)
+        if (op.operand_type == OperandType.MUL):
+            return Share( (shareA.__mul__(shareB)).value, shareA.num_shares)
+        if (op.operand_type == OperandType.SUB):
+            return Share( (shareA.__sub__(shareB)).value, shareA.num_shares)
 
 
 
