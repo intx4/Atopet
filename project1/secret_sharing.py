@@ -5,7 +5,7 @@ Secret sharing scheme.
 from typing import List
 from random import randint, getrandbits
 
-FIELD = 65537
+FIELD = 65537 #this should be common between all participants
 
 class Share:
     """
