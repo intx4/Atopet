@@ -56,6 +56,16 @@ class Expression:
     def __mul__(self, other):
         raise NotImplementedError("You need to implement this method.")
 
+    def isScalar(self):
+        raise NotImplementedError("You need to implement this method.")
+    def isSecret(self):
+        raise NotImplementedError("You need to implement this method.")
+    def isOperand(self):
+        raise NotImplementedError("You need to implement this method.")
+    def retOperands(self):
+        raise NotImplementedError("You need to implement this method.")
+    def retOperation(self):
+        raise NotImplementedError("You need to implement this method.")
 
     def __hash__(self):
         return hash(self.id)

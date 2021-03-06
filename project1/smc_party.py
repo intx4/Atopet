@@ -15,10 +15,7 @@ from typing import (
 )
 
 from communication import Communication
-from expression import (
-    Expression,
-    Secret
-)
+from expression import *
 from protocol import ProtocolSpec
 from secret_sharing import(
     reconstruct_secret,
@@ -27,7 +24,6 @@ from secret_sharing import(
 )
 
 # Feel free to add as many imports as you want.
-
 
 class SMCParty:
     """
@@ -71,7 +67,8 @@ class SMCParty:
         ) -> Share:
         # if expr is an addition operation:
         #     ...
-        expr.__repr__()
+        if (expr.isOperand()):
+            share = self.process_operand(self, expr)
 
         # if expr is a multiplication operation:
         #     ...
@@ -87,4 +84,19 @@ class SMCParty:
         # further.
         pass
 
-    # Feel free to add as many methods as you want.
+    def process_operand(
+            self,
+            op: Operands
+    ) -> Share:
+        exprs = op.retOperands()
+
+        shareA = self.process_expression(self, exprs[0])
+        shareB = self.process_expression(self, exprs[1])
+
+        if (op.operand_type == OperandType.ADD):
+            return shareA
+
+
+
+
+
