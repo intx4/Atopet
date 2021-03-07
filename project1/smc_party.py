@@ -15,6 +15,8 @@ from communication import Communication
 from expression import (
     Expression,
     Secret,
+    Scalar,
+    Operation
 )
 from protocol import ProtocolSpec
 from secret_sharing import(
@@ -37,6 +39,7 @@ class SMCParty:
         value_dict (dict): Dictionary assigning values to secrets belonging to this client.
     """
 
+    is_scalar_additioner = False
     def __init__(
             self,
             client_id: str,
@@ -45,6 +48,9 @@ class SMCParty:
             protocol_spec: ProtocolSpec,
             value_dict: Dict[Secret, int]
         ):
+        protocol_spec.participant_ids.sort()
+        if protocol_spec.participant_ids[0] == client_id:
+            SMCParty.is_scalar_additioner = True
         self.comm = Communication(server_host, server_port, client_id)
         self.client_id = client_id
         self.protocol_spec = protocol_spec
@@ -79,7 +85,7 @@ class SMCParty:
             self,
             expr: Expression, scalar_mult = True
         ) -> Share:
-        if expr.is_operation():
+        if isinstance(expr, Operation):
             a, b = expr.get_operands()
             a = self.process_expression(a)
             b = self.process_expression(b)
@@ -92,12 +98,12 @@ class SMCParty:
             else:
                 raise RuntimeError("Operation expr not known")
 
-        elif expr.is_secret():
+        elif isinstance(expr, Secret):
             share = pickle.loads(self.comm.retrieve_private_message(expr.id))
             return share
 
-        elif expr.is_scalar():
-           pass
+        elif isinstance(expr, Scalar):
+            pass
         # Call specialized methods for each expression type, and have these specialized
         # methods in turn call `process_expression` on their sub-expressions to process
         # further.

@@ -9,7 +9,7 @@ class Share:
     """
     A secret share in a finite field.
     """
-    FIELD: Final[int] = 65537  # this should be common between all participants
+    FIELD: Final[int] = 6700417  # this should be common between all participants
 
     def __init__(self, value=0):
         # Adapt constructor arguments as you wish
@@ -27,10 +27,7 @@ class Share:
         return (self.value + other) % Share.FIELD
 
     def __sub__(self, other):
-        value = self.value - other.value
-        if value <= 0:
-            value = Share.FIELD - value
-        return Share(value, self.num_shares)
+        return Share((self.value-other) % Share.FIELD)
 
     def __mul__(self, other):
         return Share((self.value * other.value) % Share.FIELD)

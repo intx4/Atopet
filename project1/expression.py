@@ -54,24 +54,6 @@ class Expression:
     def __sub__(self, other):
         return Operation(self, other, OperationType.SUB)
 
-    def is_scalar(self):
-        return False
-
-    def is_secret(self):
-        return False
-
-    def is_operation(self):
-        return False
-
-    def is_addition(self):
-       raise NotImplementedError
-
-    def is_subtraction(self):
-        raise NotImplementedError
-
-    def is_multiplication(self):
-        raise NotImplementedError
-
     def __hash__(self):
         return hash(self.id)
 
@@ -98,8 +80,6 @@ class Scalar(Expression):
     def __hash__(self):
         return hash(self.id)
 
-    def is_scalar(self):
-        return True
 
 
 class Secret(Expression):
@@ -117,9 +97,6 @@ class Secret(Expression):
         return (
             f"{self.__class__.__name__}({self.value if self.value is not None else 'Null'})"
         )
-
-    def is_secret(self):
-        return True
 
 
 class Operation(Expression):
@@ -144,9 +121,6 @@ class Operation(Expression):
         if not self.operand_type == OperationType.MUL:
             ans = f"({ans})"
         return ans
-
-    def is_operation(self):
-        return True
 
     def get_operands(self) -> List[Expression]:
         return [self.a, self.b]
