@@ -26,9 +26,9 @@ def gen_id() -> bytes:
 
 
 class OperationType(Enum):
-    ADD =  'add'
-    MUL = 'mul'
-    SUB = 'sub'
+    ADD = '+'
+    MUL = '*'
+    SUB = '-'
 
 
 class Expression:
@@ -46,15 +46,13 @@ class Expression:
         self.id = id
 
     def __add__(self, other):
-        raise NotImplementedError("You need to implement this method.")
-
-
-    def __sub__(self, other):
-        raise NotImplementedError("You need to implement this method.")
-
+        return Operation(self, other, OperationType.ADD)
 
     def __mul__(self, other):
-        raise NotImplementedError("You need to implement this method.")
+        return Operation(self, other, OperationType.MUL)
+
+    def __sub__(self, other):
+        return Operation(self, other, OperationType.SUB)
 
     def is_scalar(self):
         return False
@@ -64,6 +62,15 @@ class Expression:
 
     def is_operation(self):
         return False
+
+    def is_addition(self):
+       raise NotImplementedError
+
+    def is_subtraction(self):
+        raise NotImplementedError
+
+    def is_multiplication(self):
+        raise NotImplementedError
 
     def __hash__(self):
         return hash(self.id)
@@ -94,6 +101,7 @@ class Scalar(Expression):
     def is_scalar(self):
         return True
 
+
 class Secret(Expression):
     """Term representing a secret finite field value (variable)."""
 
@@ -104,15 +112,6 @@ class Secret(Expression):
         ):
         self.value = value
         super().__init__(id)
-
-    def __add__(self, other):
-        return Operation(self, other, OperationType.ADD)
-
-    def __mul__(self, other):
-        return Operation(self, other, OperationType.MUL)
-
-    def __sub__(self, other):
-        return Operation(self, other, OperationType.SUB)
 
     def __repr__(self):
         return (
@@ -141,10 +140,10 @@ class Operation(Expression):
         return Operation(self, other, OperationType.SUB)
 
     def __repr__(self):
-        return (
-            f"{self.__class__.__name__}({self.operand_type.name})"
-        )
-    # Helper functions for descending the tree
+        ans = f"{repr(self.a)} {self.operand_type.value} {repr(self.b)}"
+        if not self.operand_type == OperationType.MUL:
+            ans = f"({ans})"
+        return ans
 
     def is_operation(self):
         return True
@@ -152,7 +151,13 @@ class Operation(Expression):
     def get_operands(self) -> List[Expression]:
         return [self.a, self.b]
 
-    def get_operation_type(self):
-        return self.operand_type
+    def is_addition(self):
+        return self.operand_type == OperationType.ADD
+
+    def is_subtraction(self):
+        return self.operand_type == OperationType.SUB
+
+    def is_multiplication(self):
+        return self.operand_type == OperationType.MUL
 
 # Feel free to add as many classes as you like.

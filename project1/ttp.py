@@ -14,8 +14,7 @@ from typing import (
 from communication import Communication
 from secret_sharing import (
     Share,
-    share_secret,
-    FIELD
+    split_secret_in_shares
 )
 
 from random import randint
@@ -65,14 +64,13 @@ class TrustedParamGenerator:
 class BeaverTriplet:
     """Element defining a Beaver Triplet, containing the three elements (a, b, c), the num of parties, and their shares"""
     def __init__(self, numParties):
-
-        self.a = randint(0, int(floor(sqrt(FIELD))))
-        self.b = randint(0, int(floor(sqrt(FIELD))))
+        self.a = randint(0, int(floor(sqrt(Share.FIELD))))
+        self.b = randint(0, int(floor(sqrt(Share.FIELD))))
         self.c = self.a * self.b
 
-        self.listA = share_secret(self.a, numParties)
-        self.listB = share_secret(self.b, numParties)
-        self.listC = share_secret(self.c, numParties)
+        self.listA = split_secret_in_shares(self.a, numParties)
+        self.listB = split_secret_in_shares(self.b, numParties)
+        self.listC = split_secret_in_shares(self.c, numParties)
 
     def get_shares(self, id):
         return Tuple[self.listA[id], self.listB[id], self.listC[id]]
