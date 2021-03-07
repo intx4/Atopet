@@ -28,7 +28,7 @@ class Share:
         return (self.value + other) % Share.FIELD
 
     def __sub__(self, other):
-        return Share((self.value-other) % Share.FIELD)
+        return Share((self.value-other.value) % Share.FIELD)
 
     def __mul__(self, other):
         return Share((self.value * other.value) % Share.FIELD)

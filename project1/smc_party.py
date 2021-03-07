@@ -93,7 +93,7 @@ class SMCParty:
     # Suggestion: To process expressions, make use of the *visitor pattern* like so:
     def process_expression(
             self,
-            expr: Expression, scalar_addition = False, secret_mul = False
+            expr: Expression, scalar_addition = False
         ) -> Share:
         scalar_addition = False
         if isinstance(expr, Operation):
@@ -103,13 +103,13 @@ class SMCParty:
                     scalar_addition = True
                 a = self.process_expression(a, scalar_addition)
                 b = self.process_expression(b, scalar_addition)
-                return a.__add__(b)
+                return a + b
             elif expr.is_subtraction():
-                if isinstance(a, Scalar) or isinstance(b , Scalar):
+                if isinstance(a, Scalar) or isinstance(b, Scalar):
                     scalar_addition = True
                 a = self.process_expression(a, scalar_addition)
                 b = self.process_expression(b, scalar_addition)
-                return a.__sub__(b)
+                return a - b
             elif expr.is_multiplication():
                 # TO DO. Distinguish if is a multiplication between two secrets
                 """
