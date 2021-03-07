@@ -40,6 +40,7 @@ class SMCParty:
     """
 
     is_scalar_additioner = False
+
     def __init__(
             self,
             client_id: str,
@@ -55,6 +56,8 @@ class SMCParty:
         self.client_id = client_id
         self.protocol_spec = protocol_spec
         self.value_dict = value_dict
+        self.my_secret_id = b"" #stores the b64 id of the secret I generated to know whether to fetch share localy.
+        self.my_secret_share = Share(0) #share of my secret
 
 
     def run(self) -> int:
@@ -69,41 +72,70 @@ class SMCParty:
             shares.append(pickle.loads(self.comm.retrieve_public_message(client_id,'done')))
         return sum(shares)
 
-
+    """Distribute shares of my secret among other parties"""
     def init_secret_sharing(self):
         other_clients_ids = self.protocol_spec.participant_ids
+        #isn't value_dict just one value? (ours)
         for key in self.value_dict.keys():
             secret_value = self.value_dict[key]
             shares = split_secret_in_shares(secret_value, len(other_clients_ids), key.id)
             for client_id, share in zip(other_clients_ids, shares):
-                serialized_share = pickle.dumps(share)
-                self.comm.send_private_message(client_id, key.id, serialized_share)
+                if self.client_id != client_id:
+                    serialized_share = pickle.dumps(share)
+                    self.comm.send_private_message(client_id, str(key.id), serialized_share)
+                else:
+                    #No no, don't touch me there. This is, my local share!
+                    self.my_secret_share = share
+                    self.my_secret_id = key.id
+
 
 
     # Suggestion: To process expressions, make use of the *visitor pattern* like so:
     def process_expression(
             self,
-            expr: Expression, scalar_mult = True
+            expr: Expression, scalar_addition = False, secret_mul = False
         ) -> Share:
+        scalar_addition = False
         if isinstance(expr, Operation):
             a, b = expr.get_operands()
-            a = self.process_expression(a)
-            b = self.process_expression(b)
             if expr.is_addition():
-                return a+b
+                if isinstance(a, Scalar) or isinstance(b, Scalar):
+                    scalar_addition = True
+                a = self.process_expression(a, scalar_addition)
+                b = self.process_expression(b, scalar_addition)
+                return a.__add__(b)
             elif expr.is_subtraction():
-                return a-b
+                if isinstance(a, Scalar) or isinstance(b , Scalar):
+                    scalar_addition = True
+                a = self.process_expression(a, scalar_addition)
+                b = self.process_expression(b, scalar_addition)
+                return a.__sub__(b)
             elif expr.is_multiplication():
-                return a*b
+                # TO DO. Distinguish if is a multiplication between two secrets
+                """
+                a = self.process_expression(a)
+                b = self.process_expression(b)
+                return a.__mul__(b)
+                """
+                raise  RuntimeError("Lazy programmers did not implement multiplication")
             else:
                 raise RuntimeError("Operation expr not known")
 
         elif isinstance(expr, Secret):
-            share = pickle.loads(self.comm.retrieve_private_message(expr.id))
-            return share
+            if expr.id != self.my_secret_id:
+                return pickle.loads(self.comm.retrieve_private_message(str(expr.id)))
+            else:
+                return self.my_secret_share
+
 
         elif isinstance(expr, Scalar):
-            pass
+            if scalar_addition:
+                if self.is_scalar_additioner:
+                    return Share(expr.value, expr.id)
+                else:
+                    return Share(0, expr.id)
+            else:
+                return Share(expr.value, expr.id)
         # Call specialized methods for each expression type, and have these specialized
         # methods in turn call `process_expression` on their sub-expressions to process
         # further.

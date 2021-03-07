@@ -11,9 +11,10 @@ class Share:
     """
     FIELD: Final[int] = 6700417  # this should be common between all participants
 
-    def __init__(self, value=0):
+    def __init__(self, value=0, id=b""):
         # Adapt constructor arguments as you wish
         self.value = value % Share.FIELD
+        self.id = id #b64 for identifying the secret expression this secret share belongs
 
     def __repr__(self):
         # Helps with debugging.
@@ -34,17 +35,17 @@ class Share:
 
 def reconstruct_secret(shares: List[Share]) -> int:
     """Reconstruct the secret from shares."""
-    return sum(shares)
+    return sum(shares) % shares[0].FIELD
 
 # Feel free to add as many methods as you want.
-def split_secret_in_shares(secret: int, total_num_shares: int, share_id: int) -> List[Share]:
+def split_secret_in_shares(secret: int, total_num_shares: int, share_id: bytes) -> List[Share]:
     """Generate secret shares."""
     # s = sum_0^N-1(s_i)
     shares = []
     Share.num_shares = total_num_shares
     for _ in range(0, total_num_shares - 1):
         rand = randint(0, Share.FIELD)
-        shares.append(Share(rand))
-    s0 = secret - sum(shares)
-    shares.append(Share(s0))
+        shares.append(Share(rand, share_id))
+    s0 = (secret - sum(shares)) % shares[0].FIELD
+    shares.append(Share(s0, share_id))
     return shares
