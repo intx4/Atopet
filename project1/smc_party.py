@@ -38,9 +38,6 @@ class SMCParty:
         protocol_spec (ProtocolSpec): Protocol specification
         value_dict (dict): Dictionary assigning values to secrets belonging to this client.
     """
-
-    is_scalar_additioner = False
-
     def __init__(
             self,
             client_id: str,
@@ -50,8 +47,6 @@ class SMCParty:
             value_dict: Dict[Secret, int]
         ):
         protocol_spec.participant_ids.sort()
-        if protocol_spec.participant_ids[0] == client_id:
-            SMCParty.is_scalar_additioner = True
         self.comm = Communication(server_host, server_port, client_id)
         self.client_id = client_id
         self.protocol_spec = protocol_spec
@@ -59,6 +54,8 @@ class SMCParty:
         self.my_secret_id = b"" #stores the b64 id of the secret I generated to know whether to fetch share localy.
         self.my_secret_share = Share(0) #share of my secret
 
+    def is_additioner_client(self):
+        return self.protocol_spec.participant_ids[0] == self.client_id
 
     def run(self) -> int:
         """
@@ -93,31 +90,26 @@ class SMCParty:
     # Suggestion: To process expressions, make use of the *visitor pattern* like so:
     def process_expression(
             self,
-            expr: Expression, scalar_addition = False
+            expr: Expression, is_multiplication = True
         ) -> Share:
-        scalar_addition = False
         if isinstance(expr, Operation):
             a, b = expr.get_operands()
             if expr.is_addition():
-                if isinstance(a, Scalar) or isinstance(b, Scalar):
-                    scalar_addition = True
-                a = self.process_expression(a, scalar_addition)
-                b = self.process_expression(b, scalar_addition)
+                a = self.process_expression(a, False)
+                b = self.process_expression(b, False)
                 return a + b
             elif expr.is_subtraction():
-                if isinstance(a, Scalar) or isinstance(b, Scalar):
-                    scalar_addition = True
-                a = self.process_expression(a, scalar_addition)
-                b = self.process_expression(b, scalar_addition)
+                a = self.process_expression(a, False)
+                b = self.process_expression(b, False)
                 return a - b
             elif expr.is_multiplication():
                 # TO DO. Distinguish if is a multiplication between two secrets
-                """
                 a = self.process_expression(a)
                 b = self.process_expression(b)
-                return a.__mul__(b)
-                """
-                raise  RuntimeError("Lazy programmers did not implement multiplication")
+                if a.is_secret_share() and b.is_secret_share():
+                    raise RuntimeError("Lazy programmers did not implement multiplication")
+                else:
+                    return a*b
             else:
                 raise RuntimeError("Operation expr not known")
 
@@ -127,17 +119,11 @@ class SMCParty:
             else:
                 return self.my_secret_share
 
-
         elif isinstance(expr, Scalar):
-            if scalar_addition:
-                if self.is_scalar_additioner:
-                    return Share(expr.value, expr.id)
+            if not is_multiplication:
+                if self.is_additioner_client():
+                    return Share(expr.value, Share.Scalar)
                 else:
-                    return Share(0, expr.id)
+                    return Share(0, Share.Scalar)
             else:
-                return Share(expr.value, expr.id)
-        # Call specialized methods for each expression type, and have these specialized
-        # methods in turn call `process_expression` on their sub-expressions to process
-        # further.
-
-    # Feel free to add as many methods as you want.
+                return Share(expr.value, Share.Scalar)

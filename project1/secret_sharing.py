@@ -10,6 +10,7 @@ class Share:
     A secret share in a finite field.
     """
     FIELD: Final[int] = 6700417  # this should be common between all participants
+    Scalar: Final[bytes] = b"scalar"
 
     def __init__(self, value=0, id=b""):
         # Adapt constructor arguments as you wish
@@ -32,6 +33,9 @@ class Share:
 
     def __mul__(self, other):
         return Share((self.value * other.value) % Share.FIELD)
+
+    def is_secret_share(self):
+        return Share.Scalar != self.id
 
 def reconstruct_secret(shares: List[Share]) -> int:
     """Reconstruct the secret from shares."""
