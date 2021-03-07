@@ -122,8 +122,8 @@ class SMCParty:
         elif isinstance(expr, Scalar):
             if not is_multiplication:
                 if self.is_additioner_client():
-                    return Share(expr.value, Share.Scalar)
+                    return Share(expr.value)
                 else:
-                    return Share(0, Share.Scalar)
+                    return Share(0)
             else:
-                return Share(expr.value, Share.Scalar)
+                return Share(expr.value)

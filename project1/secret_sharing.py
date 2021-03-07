@@ -12,7 +12,7 @@ class Share:
     FIELD: Final[int] = 6700417  # this should be common between all participants
     Scalar: Final[bytes] = b"scalar"
 
-    def __init__(self, value=0, id=b""):
+    def __init__(self, value=0, id=Scalar):
         # Adapt constructor arguments as you wish
         self.value = value % Share.FIELD
         self.id = id #b64 for identifying the secret expression this secret share belongs
