@@ -28,7 +28,10 @@ class Share:
         return (self.value + other) % Share.FIELD
 
     def __sub__(self, other):
-        return Share((self.value-other) % Share.FIELD)
+        value = self.value - other.value
+        if value <= 0:
+            value = Share.FIELD + value #value is negative
+        return Share(value % Share.FIELD)
 
     def __mul__(self, other):
         return Share((self.value * other.value) % Share.FIELD)
@@ -42,10 +45,11 @@ def split_secret_in_shares(secret: int, total_num_shares: int, share_id: bytes) 
     """Generate secret shares."""
     # s = sum_0^N-1(s_i)
     shares = []
-    Share.num_shares = total_num_shares
     for _ in range(0, total_num_shares - 1):
         rand = randint(0, Share.FIELD)
         shares.append(Share(rand, share_id))
-    s0 = (secret - sum(shares)) % shares[0].FIELD
+    s0 = (secret - sum(shares)) % Share.FIELD
+    if s0 <= 0:
+        s0 = Share.FIELD + s0 #s0 is negative
     shares.append(Share(s0, share_id))
     return shares

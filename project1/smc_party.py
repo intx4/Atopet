@@ -69,7 +69,7 @@ class SMCParty:
         self.comm.publish_message('done', pickle.dumps(my_share))
         shares = []
         for client_id in self.protocol_spec.participant_ids:
-            shares.append(pickle.loads(self.comm.retrieve_public_message(client_id,'done')))
+            shares.append(pickle.loads(self.comm.retrieve_public_message(client_id ,'done')))
         return sum(shares)
 
     """Distribute shares of my secret among other parties"""
@@ -95,7 +95,6 @@ class SMCParty:
             self,
             expr: Expression, scalar_addition = False, secret_mul = False
         ) -> Share:
-        scalar_addition = False
         if isinstance(expr, Operation):
             a, b = expr.get_operands()
             if expr.is_addition():
