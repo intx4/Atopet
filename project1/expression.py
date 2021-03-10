@@ -57,6 +57,10 @@ class Expression:
     def __hash__(self):
         return hash(self.id)
 
+    def is_Scalar(self):
+        return False
+    def is_Secret(self):
+        return False
 
     # Feel free to add as many methods as you like.
 
@@ -80,6 +84,11 @@ class Scalar(Expression):
     def __hash__(self):
         return hash(self.id)
 
+    def is_Scalar(self):
+        return True
+    def is_Secret(self):
+        return False
+
 
 
 class Secret(Expression):
@@ -98,6 +107,10 @@ class Secret(Expression):
             f"{self.__class__.__name__}({self.value if self.value is not None else 'Null'})"
         )
 
+    def is_Scalar(self):
+        return False
+    def is_Secret(self):
+        return True
 
 class Operation(Expression):
     """Term representing an operation between basic expression (i.e. sum between two secrets). It's a node of a tree"""

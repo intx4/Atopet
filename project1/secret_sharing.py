@@ -10,30 +10,41 @@ class Share:
     A secret share in a finite field.
     """
     FIELD: Final[int] = 6700417  # this should be common between all participants
-    BYTES: Final[int] = 3
-    Scalar: Final[bytes] = b"scalar"
+    Scalar: Final[bytes] = b"Scalar"
 
     def __init__(self, value=0, id=Scalar):
         # Adapt constructor arguments as you wish
         self.value = value % Share.FIELD
-        self.id = id #b64 for identifying the secret expression this secret share belongs
+        self.id = id #in order to distinguish a secret from a scalar
 
     def __repr__(self):
         # Helps with debugging.
         return f"{self.__class__.__name__}({self.value if self.value is not None else 'Null'})"
 
     def __add__(self, other):
-        return Share((self.value + other.value) % Share.FIELD)
+        if self.is_secret_share() or other.is_secret_share():
+            id = b"Secret"
+        else:
+            id = b"Scalar"
+        return Share((self.value + other.value) % Share.FIELD, id)
 
     def __radd__(self, other):
         # Used by SUM function to perform a right add instead of a left add
         return (self.value + other) % Share.FIELD
 
     def __sub__(self, other):
-        return Share((self.value-other.value) % Share.FIELD)
+        if self.is_secret_share() or other.is_secret_share():
+            id = b"Secret"
+        else:
+            id = b"Scalar"
+        return Share((self.value-other.value) % Share.FIELD, id)
 
     def __mul__(self, other):
-        return Share((self.value * other.value) % Share.FIELD)
+        if self.is_secret_share() or other.is_secret_share():
+            id = b"Secret"
+        else:
+            id = b"Scalar"
+        return Share((self.value * other.value) % Share.FIELD, id)
 
     def is_secret_share(self):
         return Share.Scalar != self.id
