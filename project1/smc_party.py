@@ -52,7 +52,7 @@ class SMCParty:
         self.client_id = client_id
         self.protocol_spec = protocol_spec
         self.value_dict = value_dict
-        self.my_secret_share = {} #share of my secret
+        self.my_secret_shares = {} #share of my secret
 
     def is_additioner_client(self):
         return self.protocol_spec.participant_ids[0] == self.client_id
@@ -82,7 +82,7 @@ class SMCParty:
                     self.comm.send_private_message(client_id, str(key.id.__hash__()), serialized_share)
                 else:
                     #No no, don't touch me there. This is, my local share!
-                    self.my_secret_share[key.id.__hash__()] = share
+                    self.my_secret_shares[key.id] = share
 
     def process_expression(
             self,
@@ -133,8 +133,8 @@ class SMCParty:
                 raise RuntimeError("Operation expr not known")
 
         elif isinstance(expr, Secret):
-            if expr.id.__hash__() in self.my_secret_share.keys():
-                return self.my_secret_share[expr.id.__hash__()]
+            if expr.id in self.my_secret_shares.keys():
+                return self.my_secret_shares[expr.id]
             else:
                 return pickle.loads(self.comm.retrieve_private_message(str(expr.id.__hash__())))
 
