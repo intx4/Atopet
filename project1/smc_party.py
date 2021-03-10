@@ -80,7 +80,7 @@ class SMCParty:
             for client_id, share in zip(other_clients_ids, shares):
                 if self.client_id != client_id:
                     serialized_share = pickle.dumps(share)
-                    self.comm.send_private_message(client_id, str(key.id), serialized_share)
+                    self.comm.send_private_message(client_id, str(key.id.__hash__()), serialized_share)
                 else:
                     #No no, don't touch me there. This is, my local share!
                     self.my_secret_share = share
@@ -108,7 +108,7 @@ class SMCParty:
                     print("Here")
                     # Beaver triplets Algorithm
                     # u = a, v = b, w = c and a = x, b = y
-                    u, v, w = self.comm.retrieve_beaver_triplet_shares(str(expr.id))
+                    u, v, w = self.comm.retrieve_beaver_triplet_shares(str(expr.id.__hash__()))
                     u = Share(u, True)
                     v = Share(v, True)
                     w = Share(w, True)
@@ -116,14 +116,14 @@ class SMCParty:
                     # y = b - v that in protocol spec would be y - b
                     x = a - u
                     y = b - v
-                    self.comm.publish_message('beaver:x-a_' + str(expr.id), pickle.dumps(x))
-                    self.comm.publish_message('beaver:y-b_' + str(expr.id), pickle.dumps(y))
+                    self.comm.publish_message('beaver:x-a_' + str(expr.id.__hash__()), pickle.dumps(x))
+                    self.comm.publish_message('beaver:y-b_' + str(expr.id.__hash__()), pickle.dumps(y))
                     print("Here")
                     # reconstruct locally x - a and y - b (where x = a, a = u, y = b, b = v)
                     for client_id in self.protocol_spec.participant_ids:
                         if self.client_id != client_id:
-                            x = x + pickle.loads(self.comm.retrieve_public_message(client_id, 'beaver:x-a_' + str(expr.id)))
-                            y = y + pickle.loads(self.comm.retrieve_public_message(client_id, 'beaver:y-b_' + str(expr.id)))
+                            x = x + pickle.loads(self.comm.retrieve_public_message(client_id, 'beaver:x-a_' + str(expr.id.__hash__())))
+                            y = y + pickle.loads(self.comm.retrieve_public_message(client_id, 'beaver:y-b_' + str(expr.id.__hash__())))
                     print("Here")
                     res = w + (a * y) + (b * x)
                     if self.is_additioner_client():
@@ -136,7 +136,7 @@ class SMCParty:
 
         elif isinstance(expr, Secret):
             if expr.id != self.my_secret_id:
-                return pickle.loads(self.comm.retrieve_private_message(str(expr.id)))
+                return pickle.loads(self.comm.retrieve_private_message(str(expr.id.__hash__())))
             else:
                 return self.my_secret_share
 
