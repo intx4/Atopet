@@ -53,7 +53,7 @@ class SMCParty:
         self.protocol_spec = protocol_spec
         self.value_dict = value_dict
         self.my_secret_id = b"" #stores the b64 id of the secret I generated to know whether to fetch share localy.
-        self.my_secret_share = Share(0, b"Secret") #share of my secret
+        self.my_secret_share = Share(0, True) #share of my secret
 
     def is_additioner_client(self):
         return self.protocol_spec.participant_ids[0] == self.client_id
@@ -76,7 +76,7 @@ class SMCParty:
         #isn't value_dict just one value? (ours)
         for key in self.value_dict.keys():
             secret_value = self.value_dict[key]
-            shares = split_secret_in_shares(secret_value, len(other_clients_ids), b"Secret")
+            shares = split_secret_in_shares(secret_value, len(other_clients_ids), True)
             for client_id, share in zip(other_clients_ids, shares):
                 if self.client_id != client_id:
                     serialized_share = pickle.dumps(share)
@@ -109,9 +109,9 @@ class SMCParty:
                     # Beaver triplets Algorithm
                     # u = a, v = b, w = c and a = x, b = y
                     u, v, w = self.comm.retrieve_beaver_triplet_shares(str(expr.id))
-                    u = Share(u, b"Secret")
-                    v = Share(v, b"Secret")
-                    w = Share(w, b"Secret")
+                    u = Share(u, True)
+                    v = Share(v, True)
+                    w = Share(w, True)
                     # x = a - u that in protocol spec would be x - a
                     # y = b - v that in protocol spec would be y - b
                     x = a - u
@@ -144,8 +144,8 @@ class SMCParty:
             # Return the constant value if and only if it's a multiplication or it's and addition and I'm the additioner.
             if not is_multiplication:
                 if self.is_additioner_client():
-                    return Share(expr.value, b"Scalar")
+                    return Share(expr.value, False)
                 else:
-                    return Share(0, b"Scalar")
+                    return Share(0, False)
             else:
-                return Share(expr.value, b"Scalar")
+                return Share(expr.value, False)

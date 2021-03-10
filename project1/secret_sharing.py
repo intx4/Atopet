@@ -10,44 +10,34 @@ class Share:
     A secret share in a finite field.
     """
     FIELD: Final[int] = 6700417  # this should be common between all participants
-    Scalar: Final[bytes] = b"Scalar"
 
-    def __init__(self, value=0, id=Scalar):
+    def __init__(self, value=0, is_secret=True):
         # Adapt constructor arguments as you wish
         self.value = value % Share.FIELD
-        self.id = id #in order to distinguish a secret from a scalar
+        self.is_secret = is_secret #in order to distinguish a secret from a scalar
 
     def __repr__(self):
         # Helps with debugging.
         return f"{self.__class__.__name__}({self.value if self.value is not None else 'Null'})"
 
     def __add__(self, other):
-        if self.is_secret_share() or other.is_secret_share():
-            id = b"Secret"
-        else:
-            id = b"Scalar"
-        return Share((self.value + other.value) % Share.FIELD, id)
+        is_secret = self.is_secret_share() or other.is_secret_share()
+        return Share((self.value + other.value) % Share.FIELD, is_secret)
 
     def __radd__(self, other):
         # Used by SUM function to perform a right add instead of a left add
         return (self.value + other) % Share.FIELD
 
     def __sub__(self, other):
-        if self.is_secret_share() or other.is_secret_share():
-            id = b"Secret"
-        else:
-            id = b"Scalar"
-        return Share((self.value-other.value) % Share.FIELD, id)
+        is_secret = self.is_secret_share() or other.is_secret_share()
+        return Share((self.value-other.value) % Share.FIELD, is_secret)
 
     def __mul__(self, other):
-        if self.is_secret_share() or other.is_secret_share():
-            id = b"Secret"
-        else:
-            id = b"Scalar"
-        return Share((self.value * other.value) % Share.FIELD, id)
+        is_secret = self.is_secret_share() or other.is_secret_share()
+        return Share((self.value * other.value) % Share.FIELD, is_secret)
 
     def is_secret_share(self):
-        return Share.Scalar != self.id
+        return self.is_secret
 
 def reconstruct_secret(shares: List[Share]) -> int:
     """Reconstruct the secret from shares."""
