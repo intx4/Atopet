@@ -32,7 +32,7 @@ class TrustedParamGenerator:
         self.participant_ids: Set[str] = set()
         self.numParties = 0
         self.tripletPerOp = dict()
-        self.clientIdentifier = dict()
+        self.clientIdentifier = dict() #client_id -> index of Beaver Triplet
 
 
     def add_participant(self, participant_id: str) -> None:
@@ -56,7 +56,8 @@ class TrustedParamGenerator:
             self.tripletPerOp[op_id] = BeaverTriplet(self.numParties)
             id = self.clientIdentifier[client_id]
             triplet = self.tripletPerOp[op_id]
-            return triplet.get_shares(id)
+            t = triplet.get_shares(id)
+            return t
 
     # Feel free to add as many methods as you want.
 
@@ -68,9 +69,9 @@ class BeaverTriplet:
         self.b = randint(0, int(floor(sqrt(Share.FIELD))))
         self.c = self.a * self.b
 
-        self.listA = split_secret_in_shares(self.a, numParties)
-        self.listB = split_secret_in_shares(self.b, numParties)
-        self.listC = split_secret_in_shares(self.c, numParties)
+        self.listA = split_secret_in_shares(self.a, numParties, b"")
+        self.listB = split_secret_in_shares(self.b, numParties, b"")
+        self.listC = split_secret_in_shares(self.c, numParties, b"")
 
     def get_shares(self, id):
-        return Tuple[self.listA[id], self.listB[id], self.listC[id]]
+        return self.listA[id], self.listB[id], self.listC[id]

@@ -10,6 +10,7 @@ class Share:
     A secret share in a finite field.
     """
     FIELD: Final[int] = 6700417  # this should be common between all participants
+    BYTES: Final[int] = 3
     Scalar: Final[bytes] = b"scalar"
 
     def __init__(self, value=0, id=Scalar):

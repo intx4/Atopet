@@ -23,6 +23,7 @@ from secret_sharing import(
     split_secret_in_shares,
     Share
 )
+from time import sleep
 
 # Feel free to add as many imports as you want.
 
@@ -46,7 +47,7 @@ class SMCParty:
             protocol_spec: ProtocolSpec,
             value_dict: Dict[Secret, int]
         ):
-        protocol_spec.participant_ids.sort()
+        protocol_spec.participant_ids.sort() #add some consistency
         self.comm = Communication(server_host, server_port, client_id)
         self.client_id = client_id
         self.protocol_spec = protocol_spec
@@ -85,12 +86,9 @@ class SMCParty:
                     self.my_secret_share = share
                     self.my_secret_id = key.id
 
-
-
-    # Suggestion: To process expressions, make use of the *visitor pattern* like so:
     def process_expression(
             self,
-            expr: Expression, is_multiplication = True
+            expr: Expression, is_multiplication=True
         ) -> Share:
         if isinstance(expr, Operation):
             a, b = expr.get_operands()
@@ -103,13 +101,36 @@ class SMCParty:
                 b = self.process_expression(b, False)
                 return a - b
             elif expr.is_multiplication():
-                # TO DO. Distinguish if is a multiplication between two secrets
+                # Distinguish if is a multiplication between two secrets
                 a = self.process_expression(a)
                 b = self.process_expression(b)
                 if a.is_secret_share() and b.is_secret_share():
-                    raise RuntimeError("Lazy programmers did not implement multiplication")
+                    print("Here")
+                    # Beaver triplets Algorithm
+                    # u = a, v = b, w = c and a = x, b = y
+                    u, v, w = self.comm.retrieve_beaver_triplet_shares(str(expr.id))
+                    u = Share(u)
+                    v = Share(v)
+                    w = Share(w)
+                    # x = a - u that in protocol spec would be x - a
+                    # y = b - v that in protocol spec would be y - b
+                    x = a - u
+                    y = b - v
+                    self.comm.publish_message('beaver:x-a_' + str(expr.id), pickle.dumps(x))
+                    self.comm.publish_message('beaver:y-b_' + str(expr.id), pickle.dumps(y))
+                    print("Here")
+                    # reconstruct locally x - a and y - b (where x = a, a = u, y = b, b = v)
+                    for client_id in self.protocol_spec.participant_ids:
+                        if self.client_id != client_id:
+                            x = x + pickle.loads(self.comm.retrieve_public_message(client_id, 'beaver:x-a_' + str(expr.id)))
+                            y = y + pickle.loads(self.comm.retrieve_public_message(client_id, 'beaver:y-b_' + str(expr.id)))
+                    print("Here")
+                    res = w + (a * y) + (b * x)
+                    if self.is_additioner_client():
+                        res = res - (x * y)
+                    return res
                 else:
-                    return a*b
+                    return a * b
             else:
                 raise RuntimeError("Operation expr not known")
 
@@ -120,6 +141,7 @@ class SMCParty:
                 return self.my_secret_share
 
         elif isinstance(expr, Scalar):
+            # Return the constant value if and only if it's a multiplication or it's and addition and I'm the additioner.
             if not is_multiplication:
                 if self.is_additioner_client():
                     return Share(expr.value)
