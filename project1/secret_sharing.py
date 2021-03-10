@@ -41,7 +41,7 @@ class Share:
 
 def reconstruct_secret(shares: List[Share]) -> int:
     """Reconstruct the secret from shares."""
-    return sum(shares) % shares[0].FIELD
+    return sum(shares)
 
 # Feel free to add as many methods as you want.
 def split_secret_in_shares(secret: int, total_num_shares: int, share_id: bytes) -> List[Share]:
