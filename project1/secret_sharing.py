@@ -10,8 +10,9 @@ class Share:
     A secret share in a finite field.
     """
     FIELD: Final[int] = 6700417  # this should be common between all participants
+    Scalar: Final[bytes] = b"scalar"
 
-    def __init__(self, value=0, id=b""):
+    def __init__(self, value=0, id=Scalar):
         # Adapt constructor arguments as you wish
         self.value = value % Share.FIELD
         self.id = id #b64 for identifying the secret expression this secret share belongs
@@ -28,13 +29,13 @@ class Share:
         return (self.value + other) % Share.FIELD
 
     def __sub__(self, other):
-        value = self.value - other.value
-        if value <= 0:
-            value = Share.FIELD + value #value is negative
-        return Share(value % Share.FIELD)
+        return Share((self.value-other.value) % Share.FIELD)
 
     def __mul__(self, other):
         return Share((self.value * other.value) % Share.FIELD)
+
+    def is_secret_share(self):
+        return Share.Scalar != self.id
 
 def reconstruct_secret(shares: List[Share]) -> int:
     """Reconstruct the secret from shares."""
@@ -45,11 +46,10 @@ def split_secret_in_shares(secret: int, total_num_shares: int, share_id: bytes) 
     """Generate secret shares."""
     # s = sum_0^N-1(s_i)
     shares = []
+    Share.num_shares = total_num_shares
     for _ in range(0, total_num_shares - 1):
         rand = randint(0, Share.FIELD)
         shares.append(Share(rand, share_id))
-    s0 = (secret - sum(shares)) % Share.FIELD
-    if s0 <= 0:
-        s0 = Share.FIELD + s0 #s0 is negative
+    s0 = (secret - sum(shares)) % shares[0].FIELD
     shares.append(Share(s0, share_id))
     return shares
