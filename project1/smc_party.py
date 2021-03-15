@@ -72,7 +72,6 @@ class SMCParty:
     """Distribute shares of my secret among other parties"""
     def init_secret_sharing(self):
         other_clients_ids = self.protocol_spec.participant_ids
-        #isn't value_dict just one value? (ours)
         for key in self.value_dict.keys():
             secret_value = self.value_dict[key]
             shares = split_secret_in_shares(secret_value, len(other_clients_ids), True)
@@ -99,7 +98,7 @@ class SMCParty:
                 b = self.process_expression(b, False)
                 return a - b
             elif expr.is_multiplication():
-                # Distinguish if is a multiplication between two secrets
+                # Distinguish if multiplication between two secrets
                 a = self.process_expression(a)
                 b = self.process_expression(b)
                 if a.is_secret_share() and b.is_secret_share():
@@ -130,6 +129,7 @@ class SMCParty:
                 raise RuntimeError("Operation expr not known")
 
         elif isinstance(expr, Secret):
+            #either fetch localy or from the server
             if expr.id in self.my_secret_shares.keys():
                 return self.my_secret_shares[expr.id]
             else:

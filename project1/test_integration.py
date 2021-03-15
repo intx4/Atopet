@@ -239,3 +239,21 @@ def test_suite8():
     )
     expected = (((3 + 8) + (14 * 9) - 2) * (5 + 7))
     suite(parties, expr, expected)
+
+def test_bytes_addition():
+    for rep in range(0, 100):
+        num_parties = 10
+        secrets = []
+        for i in range(0, num_parties):
+            secrets.append(Secret())
+        parties = {}
+
+        for i in range(0, num_parties):
+            parties["A"+str(i)] = {secrets[i]: 1}
+
+        expr = secrets[0]
+        for i in range(1, num_parties):
+            expr = expr + secrets[i]
+
+        suite(parties, expr, num_parties)
+        time.sleep(2)
