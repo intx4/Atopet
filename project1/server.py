@@ -18,7 +18,7 @@ environ["WERKZEUG_RUN_MAIN"] = "true"
 app: Flask = Flask("Trusted Third Party Server")
 store: Dict[str, Dict[Tuple[str, str], bytes]] = collections.defaultdict(dict)
 ttp: TrustedParamGenerator = TrustedParamGenerator()
-analyst: Analyst = Analyst()
+analyst: Analyst = Analyst(True)
 
 
 @app.route("/private/<sender_id>/<receiver_id>/<label>", methods=["POST"])

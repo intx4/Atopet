@@ -10,6 +10,8 @@ from typing import (
 )
 
 import pickle
+import time
+import csv
 
 from communication import Communication
 from expression import (
@@ -53,6 +55,7 @@ class SMCParty:
         self.protocol_spec = protocol_spec
         self.value_dict = value_dict
         self.my_secret_shares = {} #share of my secret
+        self.verbose = True
 
     def is_additioner_client(self):
         return self.protocol_spec.participant_ids[0] == self.client_id
@@ -61,12 +64,21 @@ class SMCParty:
         """
         The method the client use to do the SMC.
         """
+        tic = time.perf_counter()
         self.init_secret_sharing()
         my_share = self.process_expression(self.protocol_spec.expr)
         self.comm.publish_message('done', pickle.dumps(my_share))
         shares = []
         for client_id in self.protocol_spec.participant_ids:
             shares.append(pickle.loads(self.comm.retrieve_public_message(client_id ,'done')))
+        toc = time.perf_counter()
+
+        if self.verbose and self.is_additioner_client():
+            timer = (toc - tic) * 1000 #to milliseconds
+            with open('time_addition.csv', 'a') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow([len(self.protocol_spec.participant_ids), timer])
+
         return sum(shares)
 
     """Distribute shares of my secret among other parties"""

@@ -1,9 +1,10 @@
 import csv
 """Used for logging purposes for performance analysis"""
 class Analyst:
-    def __init__(self):
+    def __init__(self, verbose: bool):
         self.bytes_in = 0
         self.bytes_out = 0
+        self.verbose = verbose
 
     def __increment_in__(self, amount: int):
         self.bytes_in += amount
@@ -16,7 +17,7 @@ class Analyst:
         self.requests = 0
     def __log__(self):
         self.requests += 1
-        if self.requests == self.num**2:
+        if self.requests == self.num**2 and self.verbose:
             print(f"[ BYTES IN ] = {self.bytes_in}")
             print(f"[ BYTES OUT ] = {self.bytes_out}")
             with open('bytes_addition.csv', 'a') as csvfile:
