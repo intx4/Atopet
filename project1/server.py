@@ -99,14 +99,14 @@ def run(host: str, port: int, participants: List[str]) -> None:
     """
     for participant in participants:
         ttp.add_participant(participant)
-    app.run(host, port)
+    app.run(host, port, threaded=1, processes=1)
 
 
 def main(args: List[str]) -> None:
     """
     Entrypoint of the program.
     """
-    run("localhost", 5000, args, threaded=1, processes=1)
+    run("localhost", 5000, args)
 
 
 if __name__ == "__main__":

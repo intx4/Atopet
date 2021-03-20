@@ -7,6 +7,8 @@ from server import run
 from PerformanceDecorator import PerformanceDecorator
 from smc_party import SMCParty
 
+REP = 10
+
 def smc_client(client_id, prot, value_dict, queue, decorator):
     cli = SMCParty(
         client_id,
@@ -63,14 +65,18 @@ def suite(parties, expr, decorators):
 
 
 def main():
-    scalar_multiplications()
+    #num_party_change()
+    #secrets_addition()
+    #secrets_multiplications()
+    #scalar_multiplications()
+    scalar_additions()
     return
 
 def secrets_addition():
-    num_parties = 10
-    num_secrets = [10, 50, 100, 500]
+    num_parties = 5
+    num_secrets = [5, 10, 50, 100, 250, 500]
     for num_secret in num_secrets:
-        for rep in range(0, 10):
+        for rep in range(0, REP):
             expr = None
             secrets = []
             for _ in range(0, num_secret):
@@ -93,13 +99,13 @@ def secrets_addition():
                 parties[key] = dic
                 decorators[key] = PerformanceDecorator('/secrets_additions/', str(num_secret))
             suite(parties, expr, decorators)
- #           time.sleep(1)
+            time.sleep(1)
 
 def secrets_multiplications():
     num_parties = 4
-    num_secrets = [4, 8, 12, 16]
+    num_secrets = [4, 8, 12, 16, 20, 24]
     for num_secret in num_secrets:
-        for rep in range(0, 10):
+        for rep in range(0, REP):
             expr = None
             secrets = []
             for _ in range(0, num_secret):
@@ -122,41 +128,55 @@ def secrets_multiplications():
                 parties[key] = dic
                 decorators[key] = PerformanceDecorator('/secrets_multiplications/', str(num_secret))
             suite(parties, expr, decorators)
+            time.sleep(1)
 
 def num_party_change():
-    num_secret = 20
-    num_parties = [20, 10, 5, 2]
+    num_secret = 10
+    num_parties = [5, 10, 20, 30, 40, 50]
     for num_party in num_parties:
-        for rep in range(0, 10):
+        for rep in range(0, REP):
             expr = None
             secrets = []
-            for _ in range(0, num_secret):
+            for i in range(0, num_secret):
                 tmp = Secret()
                 secrets.append(tmp)
                 if expr:
-                    expr += tmp
+                    if i % 2 == 0:
+                        expr += tmp
+                    else:
+                        expr *= tmp
                 else:
                     expr = tmp
             num_sec_per_party = int(num_secret/num_party)
             parties = {}
             decorators = {}
-            for i in range(0, num_party):
-                dic = {}
-                party_secrets = secrets[:num_sec_per_party]
-                secrets = secrets[num_sec_per_party:]
-                for party_secret in party_secrets:
-                    dic[party_secret] = 1
-                key = "A" + str(i)
-                parties[key] = dic
-                decorators[key] = PerformanceDecorator('/num_party_change/', str(num_party))
+            if num_sec_per_party > 0:
+                for i in range(0, num_party):
+                    dic = {}
+                    party_secrets = secrets[:num_sec_per_party]
+                    secrets = secrets[num_sec_per_party:]
+                    for party_secret in party_secrets:
+                        dic[party_secret] = 1
+                    key = "A" + str(i)
+                    parties[key] = dic
+                    decorators[key] = PerformanceDecorator('/num_party_change/', str(num_party))
+            else:
+                for i in range(0, num_party):
+                    key = "A" + str(i)
+                    if i < num_secret:
+                        parties[key] = {secrets[i]: 1}
+                    else:
+                        parties[key] = {None: 0}
+                    decorators[key] = PerformanceDecorator('/num_party_change/', str(num_party))
             suite(parties, expr, decorators)
+            time.sleep(1)
 
 def scalar_additions():
-    num_parties = 2
-    num_additions = [10, 50, 100, 500]
-    num_secret = 2
+    num_parties = 5
+    num_additions = [10, 50, 100, 250, 500]
+    num_secret = 5
     for num_addition in num_additions:
-        for rep in range(0, 10):
+        for rep in range(0, REP):
             expr = None
             secrets = []
             for _ in range(0, num_secret):
@@ -181,14 +201,14 @@ def scalar_additions():
             for _ in range(0, num_addition):
                 expr += Scalar(1)
             suite(parties, expr, decorators)
-#           time.sleep(1)
+            time.sleep(1)
 
 def scalar_multiplications():
-    num_parties = 2
-    num_additions = [2, 4, 8, 16]
-    num_secret = 2
+    num_parties = 5
+    num_additions = [10, 50, 100, 250, 500]
+    num_secret = 5
     for num_multiplication in num_additions:
-        for rep in range(0, 10):
+        for rep in range(0, REP):
             expr = None
             secrets = []
             for _ in range(0, num_secret):
@@ -213,6 +233,7 @@ def scalar_multiplications():
             for _ in range(0, num_multiplication):
                 expr *= Scalar(3)
             suite(parties, expr, decorators)
+            time.sleep(1)
 
 if __name__ == '__main__':
     main()

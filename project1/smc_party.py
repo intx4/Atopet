@@ -81,16 +81,17 @@ class SMCParty:
     def init_secret_sharing(self):
         other_clients_ids = self.protocol_spec.participant_ids
         for key in self.value_dict.keys():
-            secret_value = self.value_dict[key]
-            shares = split_secret_in_shares(secret_value, len(other_clients_ids), True)
-            for client_id, share in zip(other_clients_ids, shares):
-                if self.client_id != client_id:
-                    serialized_share = pickle.dumps(share)
-                    self.decorator.increment_byte_out(len(serialized_share))
-                    self.comm.send_private_message(client_id, str(key.id.__hash__()), serialized_share)
-                else:
-                    #No no, don't touch me there. This is, my local share!
-                    self.my_secret_shares[key.id] = share
+            if key is not None:
+                secret_value = self.value_dict[key]
+                shares = split_secret_in_shares(secret_value, len(other_clients_ids), True)
+                for client_id, share in zip(other_clients_ids, shares):
+                    if self.client_id != client_id:
+                        serialized_share = pickle.dumps(share)
+                        self.decorator.increment_byte_out(len(serialized_share))
+                        self.comm.send_private_message(client_id, str(key.id.__hash__()), serialized_share)
+                    else:
+                        #No no, don't touch me there. This is, my local share!
+                        self.my_secret_shares[key.id] = share
 
     def process_expression(
             self,
