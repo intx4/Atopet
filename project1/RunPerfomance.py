@@ -63,7 +63,7 @@ def suite(parties, expr, decorators):
 
 
 def main():
-    secrets_multiplications()
+    num_party_change()
     return
 
 def secrets_addition():
@@ -127,7 +127,7 @@ def num_party_change():
     num_secret = 20
     num_parties = [20, 10, 5, 2]
     for num_party in num_parties:
-        for rep in range(0, 100):
+        for rep in range(0, 10):
             expr = None
             secrets = []
             for _ in range(0, num_secret):
@@ -148,7 +148,7 @@ def num_party_change():
                     dic[party_secret] = 1
                 key = "A" + str(i)
                 parties[key] = dic
-                decorators[key] = PerformanceDecorator('/num_party_change/', str(num_secret))
+                decorators[key] = PerformanceDecorator('/num_party_change/', str(num_party))
             suite(parties, expr, decorators)
 
 def scalar_additions():
