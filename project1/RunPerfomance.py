@@ -63,7 +63,7 @@ def suite(parties, expr, decorators):
 
 
 def main():
-    num_party_change()
+    scalar_multiplications()
     return
 
 def secrets_addition():
@@ -156,7 +156,7 @@ def scalar_additions():
     num_additions = [10, 50, 100, 500]
     num_secret = 2
     for num_addition in num_additions:
-        for rep in range(0, 1):
+        for rep in range(0, 10):
             expr = None
             secrets = []
             for _ in range(0, num_secret):
@@ -177,7 +177,7 @@ def scalar_additions():
                     dic[party_secret] = 1
                 key = "A" + str(i)
                 parties[key] = dic
-                decorators[key] = PerformanceDecorator('/scalar_additions/', str(num_secret))
+                decorators[key] = PerformanceDecorator('/scalar_additions/', str(num_addition))
             for _ in range(0, num_addition):
                 expr += Scalar(1)
             suite(parties, expr, decorators)
@@ -187,8 +187,8 @@ def scalar_multiplications():
     num_parties = 2
     num_additions = [2, 4, 8, 16]
     num_secret = 2
-    for num_addition in num_additions:
-        for rep in range(0, 1):
+    for num_multiplication in num_additions:
+        for rep in range(0, 10):
             expr = None
             secrets = []
             for _ in range(0, num_secret):
@@ -209,8 +209,8 @@ def scalar_multiplications():
                     dic[party_secret] = 1
                 key = "A" + str(i)
                 parties[key] = dic
-                decorators[key] = PerformanceDecorator('/scalar_multiplications/', str(num_secret))
-            for _ in range(0, num_addition):
+                decorators[key] = PerformanceDecorator('/scalar_multiplications/', str(num_multiplication))
+            for _ in range(0, num_multiplication):
                 expr *= Scalar(3)
             suite(parties, expr, decorators)
 
