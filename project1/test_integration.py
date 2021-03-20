@@ -240,22 +240,3 @@ def test_suite8():
     expected = (((3 + 8) + (14 * 9) - 2) * (5 + 7))
     suite(parties, expr, expected)
 
-def test_performance_addition():
-    num_parties_test = [10, 50, 100, 500, 1000]
-    for num_parties in num_parties_test:
-        for rep in range(0, 100):
-            secrets = []
-            for i in range(0, num_parties):
-                secrets.append(Secret())
-            parties = {}
-
-            for i in range(0, num_parties):
-                parties["A"+str(i)] = {secrets[i]: 1}
-
-            expr = secrets[0]
-            for i in range(1, num_parties):
-                expr = expr + secrets[i]
-
-            suite(parties, expr, num_parties)
-
-            time.sleep(1)
