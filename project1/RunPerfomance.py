@@ -63,7 +63,7 @@ def suite(parties, expr, decorators):
 
 
 def main():
-    secrets_addition()
+    secrets_multiplications()
     return
 
 def secrets_addition():
@@ -99,7 +99,7 @@ def secrets_multiplications():
     num_parties = 4
     num_secrets = [4, 8, 12, 16]
     for num_secret in num_secrets:
-        for rep in range(0, 100):
+        for rep in range(0, 10):
             expr = None
             secrets = []
             for _ in range(0, num_secret):

@@ -124,7 +124,7 @@ class SMCParty:
                     y = b - v
                     pickle_x = pickle.dumps(x)
                     pickle_y = pickle.dumps(y)
-                    self.decorator.increment_byte_out(len(pickle_x + len(pickle_y)))
+                    self.decorator.increment_byte_out(len(pickle_x) + len(pickle_y))
                     self.comm.publish_message('beaver:x-a_' + str(expr.id.__hash__()), pickle_x)
                     self.comm.publish_message('beaver:y-b_' + str(expr.id.__hash__()), pickle_y)
                     # reconstruct locally x - a and y - b (where x = a, a = u, y = b, b = v)
