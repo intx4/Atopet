@@ -65,16 +65,16 @@ def suite(parties, expr, decorators):
 
 
 def main():
-    #num_party_change()
-    #secrets_addition()
-    #secrets_multiplications()
-    #scalar_multiplications()
+    num_party_change()
+    secrets_addition()
+    secrets_multiplications()
+    scalar_multiplications()
     scalar_additions()
     return
 
 def secrets_addition():
-    num_parties = 5
-    num_secrets = [5, 10, 50, 100, 250, 500]
+    num_parties = 5 #fixed
+    num_secrets = [25, 50, 100, 150, 200, 300]
     for num_secret in num_secrets:
         for rep in range(0, REP):
             expr = None
@@ -102,8 +102,8 @@ def secrets_addition():
             time.sleep(1)
 
 def secrets_multiplications():
-    num_parties = 4
-    num_secrets = [4, 8, 12, 16, 20, 24]
+    num_parties = 5
+    num_secrets = [5, 10, 15, 30, 50, 100]
     for num_secret in num_secrets:
         for rep in range(0, REP):
             expr = None
@@ -132,7 +132,7 @@ def secrets_multiplications():
 
 def num_party_change():
     num_secret = 10
-    num_parties = [5, 10, 20, 30, 40, 50]
+    num_parties = [5, 10, 25, 50, 75, 100]
     for num_party in num_parties:
         for rep in range(0, REP):
             expr = None
@@ -173,7 +173,7 @@ def num_party_change():
 
 def scalar_additions():
     num_parties = 5
-    num_additions = [10, 50, 100, 250, 500]
+    num_additions = [10, 50, 100, 200, 250, 300, 400, 500]
     num_secret = 5
     for num_addition in num_additions:
         for rep in range(0, REP):
@@ -205,7 +205,7 @@ def scalar_additions():
 
 def scalar_multiplications():
     num_parties = 5
-    num_additions = [10, 50, 100, 250, 500]
+    num_additions = [10, 50, 100, 200, 250, 300, 400, 500]
     num_secret = 5
     for num_multiplication in num_additions:
         for rep in range(0, REP):
