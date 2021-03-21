@@ -13,7 +13,6 @@ import base64
 import random
 from typing import Optional, List
 from enum import Enum
-from binascii import hexlify, unhexlify
 
 
 ID_BYTES = 4
