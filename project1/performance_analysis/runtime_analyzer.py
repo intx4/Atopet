@@ -25,11 +25,11 @@ for path, var in zip(paths, vars):
 
     fig, axs = plt.subplots(2)
     axs[0].set_title('Mean with std. error')
-    axs[0].set(ylabel='avg runtime')
+    axs[0].set(ylabel='avg runtime in seconds')
     axs[0].errorbar(x, m, yerr=e, fmt='--o', color='red', ecolor='lightgray', elinewidth=3)
     axs[1].set(xlabel=var, ylabel='variance')
     axs[1].plot(x, v, 'o', color='g')
     axs[1].set_title('Variance')
     for ax in fig.get_axes():
         ax.label_outer()
-    plt.savefig('runtime_'+path+'_.png')
+    plt.savefig('runtime_'+path+'.png')

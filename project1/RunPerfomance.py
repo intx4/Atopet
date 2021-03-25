@@ -66,10 +66,10 @@ def suite(parties, expr, decorators):
 
 def main():
     num_party_change()
-    secrets_addition()
-    secrets_multiplications()
-    scalar_multiplications()
-    scalar_additions()
+    # secrets_addition()
+    # secrets_multiplications()
+    # scalar_multiplications()
+    # scalar_additions()
     return
 
 def secrets_addition():
@@ -131,8 +131,8 @@ def secrets_multiplications():
             time.sleep(1)
 
 def num_party_change():
-    num_secret = 10
-    num_parties = [5, 10, 25, 50, 75, 100]
+    num_secret = 60
+    num_parties = [2, 5, 10, 20, 30, 60]
     for num_party in num_parties:
         for rep in range(0, REP):
             expr = None
