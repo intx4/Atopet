@@ -205,9 +205,9 @@ def scalar_additions():
 
 def scalar_multiplications():
     num_parties = 5
-    num_additions = [10, 50, 100, 200, 250, 300, 400, 500]
+    num_multiplications = [10, 50, 100, 200, 250, 300, 400, 500]
     num_secret = 5
-    for num_multiplication in num_additions:
+    for num_multiplication in num_multiplications:
         for rep in range(0, REP):
             expr = None
             secrets = []
