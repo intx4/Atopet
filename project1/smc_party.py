@@ -57,17 +57,34 @@ class SMCParty:
     def is_additioner_client(self):
         return self.protocol_spec.participant_ids[0] == self.client_id
 
-    def run(self) -> int:
+    def run(self):
         """
         The method the client use to do the SMC.
         """
         self.init_secret_sharing()
-        my_share = self.process_expression(self.protocol_spec.expr)
-        self.comm.publish_message('done', pickle.dumps(my_share))
-        shares = []
-        for client_id in self.protocol_spec.participant_ids:
-            shares.append(pickle.loads(self.comm.retrieve_public_message(client_id ,'done')))
-        return sum(shares)
+        if not self.protocol_spec.application :
+            my_share = self.process_expression(self.protocol_spec.expr[0])
+            self.comm.publish_message('done', pickle.dumps(my_share))
+            shares = []
+            for client_id in self.protocol_spec.participant_ids:
+                shares.append(pickle.loads(self.comm.retrieve_public_message(client_id ,'done')))
+            return sum(shares)
+        else:
+            operators = []
+            shares = []
+            iter = 0
+            for e in self.protocol_spec.expr:
+                my_share = self.process_expression(e)
+                self.comm.publish_message('done'+str(iter), pickle.dumps(my_share))
+                shares.append([])
+                for client_id in self.protocol_spec.participant_ids:
+                    shares[iter].append(pickle.loads(self.comm.retrieve_public_message(client_id, 'done'+str(iter))))
+                if iter == 0:
+                    operators.append(sum(shares[iter]) / 100)
+                else:
+                    operators.append(sum(shares[iter]))
+                iter += 1
+            return operators[0]/operators[1]
 
     """Distribute shares of my secret among other parties"""
     def init_secret_sharing(self):
