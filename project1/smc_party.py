@@ -70,20 +70,21 @@ class SMCParty:
                 shares.append(pickle.loads(self.comm.retrieve_public_message(client_id ,'done')))
             return sum(shares)
         else:
-            operators = []
-            iter = 0
+            nominator = 0
+            denominator = 0
+            first_expr = True
             for e in self.protocol_spec.expr:
                 my_share = self.process_expression(e)
-                self.comm.publish_message('done'+str(iter), pickle.dumps(my_share))
+                self.comm.publish_message('done'+str(first_expr), pickle.dumps(my_share))
                 shares = []
                 for client_id in self.protocol_spec.participant_ids:
-                    shares.append(pickle.loads(self.comm.retrieve_public_message(client_id, 'done'+str(iter))))
-                if iter == 0:
-                    operators.append(sum(shares))
+                    shares.append(pickle.loads(self.comm.retrieve_public_message(client_id, 'done'+str(first_expr))))
+                if first_expr:
+                    nominator = sum(shares)
+                    first_expr = False
                 else:
-                    operators.append(sum(shares))
-                iter += 1
-            return operators[0]/operators[1]
+                    denominator = sum(shares)
+            return nominator / denominator
 
     """Distribute shares of my secret among other parties"""
     def init_secret_sharing(self):
