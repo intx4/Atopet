@@ -27,35 +27,52 @@
 As described by \cite[Frikken]{Frikken2011}, Secure Multiparty Computation \enquote{allow for the distributed computation of a
 function over distributed inputs without revealing additional information about the inputs.}
 
-In this project we have implemented an SMC framework relying on a trusted third party to coordinate communication between parties, fulfilling tasks like delivering shares of one party secret to the other participants or storing the partial shares of the circuit evaluation to be retrieved by the parties.
+In this project we have implemented an SMC framework relying on a trusted third party to coordinate communication between
+parties, fulfilling tasks like delivering shares of one party secret to the other participants or storing the partial shares
+of the circuit evaluation to be retrieved by the parties.
 
 \section{Threat model}
 In SMC the main goal of the adversary is to gain knowledge of the inputs used by the participants in the computation of
 the function.
 
-Our framework is secure against \textit{passive but curious} adversaries, meaning that adversaries are capable of eavesdropping the communication between parties and the server and of corrupting parties, gaining knowledge of their inputs, without deviating from the protocol.
-Considering a passive adversary who listens to the incoming traffic to the server from a party, using additive secret sharing and sampling the shares uniformly at random in $Z_q$ with $q$ prime, the model is information-theoretically secure.
-Considering a passing adversary capable of compromising $n-1$ parties, assuming that dishonest parties collaborate to infer the input of a target party, the framework results secure (most of the time) in this scenario. A privacy problem arises when evaluating the circuit: if the adversary is capable of compromising $t out of n$ parties, such that $n-1$ of the $n$ secret inputs of the circuit, together with the result, are known, then retrieving the target party's secret is easy as it involves solving a \textit{1-indeterminate} equation. Nevertheless, there is no such problem when the target party provides $s > 1$ secrets as inputs to the circuit.  
-Note that the framework maintains the confidentiality of the target party's input even against an \textit{active} adversary who can deviate from the protocol, but it can't ensure correctness.
+Our framework is secure against \textit{passive but curious} adversaries, meaning that adversaries are capable of eavesdropping
+the communication between parties and the server and of corrupting parties, gaining knowledge of their inputs, without deviating from the protocol.
+Considering a passive adversary who listens to the incoming traffic to the server from a party, using additive secret
+sharing and sampling the shares uniformly at random in $Z_q$ with $q$ prime, the model is information-theoretically secure.
+Considering a passive adversary capable of compromising $n-1$ parties, assuming that dishonest parties collaborate to
+infer the input of a target party, the framework results secure (most of the time) in this scenario.
+A privacy problem arises when evaluating the circuit: if the adversary is capable of compromising $t$ out of $n$ parties,
+such that at least $n-1$ of the $n$ secret inputs of the circuit, together with the result, are known, then retrieving the
+target party's secret is easy as it involves solving an equation with $1$ unknown.
+Nevertheless, there is no such problem when honest parties provide $s > 1$ secrets as inputs to the circuit.
+Note that the framework maintains the confidentiality of the target party's input even against an
+\textit{active} adversary who can deviate from the protocol, but it can't ensure correctness.
 
 \section{Implementation details}
-The entry point of the protocol is represented by the 'run' function of the 'SMCParty' class. This function will first invoke the 'init\_secret\_sharing' function, which will generate secret shares for each party, for each secret held by the local party. Once shares are generated and send privately to the other parties via the server, the party calls the 'process\_expression' function. Expressions are represented by an AST, where each parent node is an operation and each leaf is an 'operand', i.e either a 'Secret' or a 'Scalar'. To this purpose, we defined a new class, extending the 'Expression' class, called 'Operation', which has two attributes, 'a' and 'b', which are generic expressions (either another operation or an operand), and 'operand\_type', which describes the kind of operation to be computed on the local values (i.e shares) of the operands. The implementation of the protocols for addition and multiplication ('Add-K', 'Beaver Triplets') follows the description in the course material.
+The entry point of the protocol is represented by the \texttt{run} function of the \texttt{SMCParty class}.
+This function will first invoke the \texttt{init\_secret\_sharing} function, which will generate secret shares for each party, for each secret held by the local party.
+Once shares are generated and send privately to the other parties via the server, the party calls the \texttt{process\_expression} function.
+Expressions are represented by an AST, where each parent node is an operation and each leaf is an \texttt{operand}, i.e either a \texttt{Secret} or a \texttt{Scalar}.
+To this purpose, we defined a new class, extending the \texttt{Expression} class, called \texttt{Operation}, which has two attributes, \texttt{a} and \texttt{b},
+which are generic expressions (either another operation or an operand), and \texttt{operand\_type}, which describes the kind of operation to be computed on the local values (i.e shares)
+of the operands.
+The implementation of the protocols for addition and multiplication (\texttt{Add-K}, \texttt{Beaver Triplets}) follows the description in the course material.
 
 \section{Performance evaluation}
 All measurements were performed directly on each party and recorded.
 The bytes in and out where measured on every
 network call made by the party.
-The runtime was measured as the time elapsed between the start of 'run' function in
+The runtime was measured as the time elapsed between the start of \texttt{run} function in
 party\_smc.py and the time when that function returns.
 Every individual case in each condition was run a total of 10 times.
 Unless otherwise specified the number of parties involved in each test was 5.
-The total number of measurements for test case is hence : $n.10$, where $n$ is the number of parties.
-Each plot describes the mean and the standard error of the measurement, represented by \textit{matplotlib} 'errobars', and the variance (in some test case the error is too small to be plotted). 
+The total number of measurements for test case is hence : $n \times 10$, where $n$ is the number of parties.
+Each plot describes the mean and the standard error of the measurement, represented by \texttt{matplotlib} 'errobars', and the variance (in some test case the error is too small to be plotted).
 Tests were run on the following hardware: Intel core i7-7500U and Intel core i7-8565U. There was not any noticeable difference.
 
 
 
-\begin{figure}[ht]
+\begin{figure}[h!]
     \includegraphics[width=0.49\linewidth]{../performance_analysis/dataflow_num_party_change.png}
     \includegraphics[width=0.49\linewidth]{../performance_analysis/runtime_num_party_change.png}
     \caption{Avg Runtime and Dataflow change based on the number of parties}
@@ -63,7 +80,7 @@ Tests were run on the following hardware: Intel core i7-7500U and Intel core i7-
 \end{figure}
 
 
-\begin{figure}[ht]
+\begin{figure}[h!]
     \centering
     \includegraphics[width=0.49\linewidth]{../performance_analysis/dataflow_secrets_additions.png}
     \includegraphics[width=0.49\linewidth]{../performance_analysis/runtime_secrets_additions.png}
@@ -105,11 +122,12 @@ number of bytes sent.
 The computational time increases exponentially as O($n^2$), reflecting the complexity in terms of shares to be fetched during the Beaver Protocol ($n$ parties fetching $2*(n-1)$ messages).
 The linear increase in bytes received is expected as the number of inputs to the Beaver Protocol  required to perform the secret to secret multiplication is linear in the number of parties.
 
-As far as the bytes sent are concerned, the dominant part of the protocol is represented by the 'init\_secret\_sharing' function where shares are sent to other parties.
+As far as the bytes sent are concerned, the dominant part of the protocol is represented by the \texttt{init\_secret\_sharing} function where shares are sent to other parties.
 The logarithmic-like increase in bytes sent can be explained by the ratio between the number of shares to send vs the
 number of parties to send these shares to.
 As, the number of secret per party decreases, the number of party to send the secret shares to increases counter balancing
-the decrease. More specifically, the number of shares sent is: $\frac{60*(n-1)}{n}$
+the decrease.
+More specifically, the number of shares sent is: $\frac{60*(n-1)}{n}$
 
 
 \subsection{Effect of number of Secret Additions \ref{fig:num_additions}}
