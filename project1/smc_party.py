@@ -71,18 +71,17 @@ class SMCParty:
             return sum(shares)
         else:
             operators = []
-            shares = []
             iter = 0
             for e in self.protocol_spec.expr:
                 my_share = self.process_expression(e)
                 self.comm.publish_message('done'+str(iter), pickle.dumps(my_share))
-                shares.append([])
+                shares = []
                 for client_id in self.protocol_spec.participant_ids:
-                    shares[iter].append(pickle.loads(self.comm.retrieve_public_message(client_id, 'done'+str(iter))))
+                    shares.append(pickle.loads(self.comm.retrieve_public_message(client_id, 'done'+str(iter))))
                 if iter == 0:
-                    operators.append(sum(shares[iter]) / 100)
+                    operators.append(sum(shares))
                 else:
-                    operators.append(sum(shares[iter]))
+                    operators.append(sum(shares))
                 iter += 1
             return operators[0]/operators[1]
 

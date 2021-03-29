@@ -99,6 +99,6 @@ def test_appl():
     }
     expr = []
     expr.append(alice_grade * alice_ects + bob_grade * bob_ects + charlie_grade * charlie_ects + Scalar(emilie_grade)*Scalar(emilie_ects))
-    expr.append(alice_ects + bob_ects + charlie_ects + Scalar(emilie_ects))
+    expr.append(Scalar(100)*(alice_ects + bob_ects + charlie_ects + Scalar(emilie_ects)))
     expected = ((525 * 7 + 475 * 6 + 550 * 5 + 600*7) / (100 * (7 + 6 + 5 + 7)))
     suite(parties, expr, expected)
