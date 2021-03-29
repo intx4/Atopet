@@ -62,6 +62,7 @@ class SMCParty:
         The method the client use to do the SMC.
         """
         self.init_secret_sharing()
+        #distinguish case for application use-case
         if not self.protocol_spec.application :
             my_share = self.process_expression(self.protocol_spec.expr)
             self.comm.publish_message('done', pickle.dumps(my_share))
@@ -89,7 +90,7 @@ class SMCParty:
     """Distribute shares of my secret among other parties"""
     def init_secret_sharing(self):
         other_clients_ids = self.protocol_spec.participant_ids
-        #isn't value_dict just one value? (ours)
+        #create shares and store private locally
         for key in self.value_dict.keys():
             secret_value = self.value_dict[key]
             shares = split_secret_in_shares(secret_value, len(other_clients_ids))
@@ -98,7 +99,6 @@ class SMCParty:
                     serialized_share = pickle.dumps(share)
                     self.comm.send_private_message(client_id, str(key.id.__hash__()), serialized_share)
                 else:
-                    #No no, don't touch me there. This is, my local share!
                     self.my_secret_shares[key.id] = share
 
     def process_expression(
