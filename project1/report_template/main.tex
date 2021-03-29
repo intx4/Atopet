@@ -58,6 +58,10 @@ which are generic expressions (either another operation or an operand), and \tex
 of the operands.
 The implementation of the protocols for addition and multiplication (\texttt{Add-K}, \texttt{Beaver Triplets}) follows the description in the course material.
 
+We modified the \texttt{protocol.py} logic slightly to account for our custom application.
+Our parties can either handle one expression or a list containing two expression, its first element is the nominator
+its second element is the denominator as we have a division in our custom application.
+
 \section{Performance evaluation}
 All measurements were performed directly on each party and recorded.
 The bytes in and out where measured on every
@@ -149,12 +153,16 @@ This is probably due to the fact that since these operations do not require any 
 prone to the CPU computational noise.
 
 \section{Application}
-The SMC framework can be used for the evaluation of circuit whose inputs might contain sensible information. A realistic use case scenario is the following: suppose that $n$ students want to compute their average GPA of the semester. Some of them, with an high GPA, have no concern in publicly reveling their grades and the amount of credits gained, while other students wish to keep these information private. The SMC framework can be used in such scenario by computing the following circuit: 
+The SMC framework can be used for the evaluation of circuit whose inputs might contain sensible information.
+A realistic use case scenario is the following: suppose that $n$ students want to compute their average GPA of the semester.
+Some of them, with an high GPA, have no concern in publicly reveling their grades and the amount of credits gained, while other students wish to keep these information private.
+The SMC framework can be used in such scenario by computing the following circuit:
 \[f = \frac{\sum_{i=1}^{n}(grade_{i}*ects_{i})}{\sum_{i=1}^{n}ects_{i}}\]
-In the implementation, students who want to keep their inputs secret will exploit the 'Secret()' class, while those who are not concerned will make use of 'Scalar()'.
+In the implementation, students who want to keep their inputs secret will exploit the \texttt{Secret()} class, while those who are not concerned will make use of \texttt{Scalar()}.
 In order to avoid defining a new operation, the division modulo $q$, the numerator and denominator of the fraction will be evaluated as two separate expressions, and then the division will be locally computed by each party.
-As far as privacy flaws are concerned, there is again the problem of a passive adversary being capable of inferring a target party's secret if she manages to compromise all but one secrets. A mitigation to such problem could be enforcing users to keep secret both their grades and credits gained. 
+As far as privacy flaws are concerned, there is again the problem of a passive adversary being capable of inferring a target party's secret if she manages to compromise all but one secrets.
+A mitigation to such a problem could be enforcing users to keep secret both their grades and credits gained.
 
 \bibliographystyle{IEEEtran}
 \bibliography{bib}
-\end{document}**
+\end{document}
