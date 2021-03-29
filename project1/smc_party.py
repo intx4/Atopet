@@ -63,7 +63,7 @@ class SMCParty:
         """
         self.init_secret_sharing()
         if not self.protocol_spec.application :
-            my_share = self.process_expression(self.protocol_spec.expr[0])
+            my_share = self.process_expression(self.protocol_spec.expr)
             self.comm.publish_message('done', pickle.dumps(my_share))
             shares = []
             for client_id in self.protocol_spec.participant_ids:
@@ -92,7 +92,7 @@ class SMCParty:
         #isn't value_dict just one value? (ours)
         for key in self.value_dict.keys():
             secret_value = self.value_dict[key]
-            shares = split_secret_in_shares(secret_value, len(other_clients_ids), True)
+            shares = split_secret_in_shares(secret_value, len(other_clients_ids))
             for client_id, share in zip(other_clients_ids, shares):
                 if self.client_id != client_id:
                     serialized_share = pickle.dumps(share)
@@ -103,17 +103,26 @@ class SMCParty:
 
     def process_expression(
             self,
-            expr: Expression, is_multiplication=True
+            expr: Expression
         ) -> Share:
         if isinstance(expr, Operation):
             a, b = expr.get_operands()
             if expr.is_addition():
-                a = self.process_expression(a, False)
-                b = self.process_expression(b, False)
-                return a + b
+                a = self.process_expression(a)
+                b = self.process_expression(b)
+                if a.is_secret_share() and b.is_secret_share():
+                    return a+b
+                elif self.is_additioner_client():
+                    return a+b
+                else:
+                    if a.is_secret_share():
+                        return a
+                    else:
+                        return b
+
             elif expr.is_subtraction():
-                a = self.process_expression(a, False)
-                b = self.process_expression(b, False)
+                a = self.process_expression(a)
+                b = self.process_expression(b)
                 return a - b
             elif expr.is_multiplication():
                 # Distinguish if is a multiplication between two secrets
@@ -153,11 +162,4 @@ class SMCParty:
                 return pickle.loads(self.comm.retrieve_private_message(str(expr.id.__hash__())))
 
         elif isinstance(expr, Scalar):
-            # Return the constant value if and only if it's a multiplication or it's and addition and I'm the additioner.
-            if not is_multiplication:
-                if self.is_additioner_client():
-                    return Share(expr.value, False)
-                else:
-                    return Share(0, False)
-            else:
-                return Share(expr.value, False)
+            return Share(expr.value, False)

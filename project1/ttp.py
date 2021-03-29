@@ -69,9 +69,9 @@ class BeaverTriplet:
         self.b = randint(0, int(floor(sqrt(Share.FIELD))))
         self.c = self.a * self.b
 
-        self.listA = split_secret_in_shares(self.a, numParties, b"")
-        self.listB = split_secret_in_shares(self.b, numParties, b"")
-        self.listC = split_secret_in_shares(self.c, numParties, b"")
+        self.listA = split_secret_in_shares(self.a, numParties)
+        self.listB = split_secret_in_shares(self.b, numParties)
+        self.listC = split_secret_in_shares(self.c, numParties)
 
     def get_shares(self, id):
         return self.listA[id], self.listB[id], self.listC[id]

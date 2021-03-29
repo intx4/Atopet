@@ -12,7 +12,7 @@ class ProtocolSpec:
     def __init__(self, participant_ids: list, expr: list):
         self.participant_ids = participant_ids
         self.expr = expr
-        if len(self.expr) > 1:
-            self.application = True
-        else:
+        if isinstance(expr, Expression):
             self.application = False
+        else:
+            self.application = True

@@ -44,14 +44,14 @@ def reconstruct_secret(shares: List[Share]) -> int:
     return sum(shares)
 
 # Feel free to add as many methods as you want.
-def split_secret_in_shares(secret: int, total_num_shares: int, share_id: bytes) -> List[Share]:
+def split_secret_in_shares(secret: int, total_num_shares: int) -> List[Share]:
     """Generate secret shares."""
     # s = sum_0^N-1(s_i)
     shares = []
     Share.num_shares = total_num_shares
     for _ in range(0, total_num_shares - 1):
         rand = randint(0, Share.FIELD)
-        shares.append(Share(rand, share_id))
+        shares.append(Share(rand, True))
     s0 = (secret - sum(shares)) % shares[0].FIELD
-    shares.append(Share(s0, share_id))
+    shares.append(Share(s0, True))
     return shares

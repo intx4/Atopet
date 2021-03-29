@@ -11,6 +11,6 @@ from secret_sharing import (
 from expression import Secret
 
 def test():
-    shares = split_secret_in_shares(2000, 5, 1)
+    shares = split_secret_in_shares(2000, 5)
     ans = reconstruct_secret(shares)
     assert ans == 2000
