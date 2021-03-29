@@ -9,7 +9,7 @@ class ProtocolSpec:
         expr: Expression to be computed
     """
 
-    def __init__(self, participant_ids: list, expr: list):
+    def __init__(self, participant_ids: list, expr):
         self.participant_ids = participant_ids
         self.expr = expr
         if isinstance(expr, Expression):
