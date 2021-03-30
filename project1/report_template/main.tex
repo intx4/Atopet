@@ -1,5 +1,4 @@
 \documentclass[10pt,conference,compsocconf]{IEEEtran}
-
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{xcolor}
@@ -10,8 +9,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{csquotes}
 
-
-\title{CS523 Project 1 Report}
+\title{CS-523 Project 1 Report}
 \author{Elvric Trombert, Francesco Intoci}
 \date{February 2020}
 
@@ -25,7 +23,7 @@
 
 \section{Introduction}
 As described by \cite[Frikken]{Frikken2011}, Secure Multiparty Computation \enquote{allow for the distributed computation of a
-function over distributed inputs without revealing additional information about the inputs.}
+function over distributed inputs without revealing additional information about the inputs, rather than what can be inferred from the output of the computation.}
 
 In this project we have implemented an SMC framework relying on a trusted third party to coordinate communication between
 parties, fulfilling tasks like delivering shares of one party secret to the other participants or storing the partial shares
@@ -35,15 +33,15 @@ of the circuit evaluation to be retrieved by the parties.
 In SMC the main goal of the adversary is to gain knowledge of the inputs used by the participants in the computation of
 the function.
 
-Our framework is secure against \textit{passive but curious} adversaries, meaning that adversaries are capable of eavesdropping
-the communication between parties and the server and of corrupting parties, gaining knowledge of their inputs, without deviating from the protocol.
+Our framework is secure against \textit{passive} adversaries, meaning that adversaries are capable of eavesdropping
+the communication between parties and the server and of "corrupting" parties, gaining knowledge of their inputs, without deviating from the protocol.
 Considering a passive adversary who listens to the incoming traffic to the server from a party, using additive secret
 sharing and sampling the shares uniformly at random in $Z_q$ with $q$ prime, the model is information-theoretically secure.
 Considering a passive adversary capable of compromising $n-1$ parties, assuming that dishonest parties collaborate to
 infer the input of a target party, the framework results secure (most of the time) in this scenario.
 A privacy problem arises when evaluating the circuit: if the adversary is capable of compromising $t$ out of $n$ parties,
-such that at least $n-1$ of the $n$ secret inputs of the circuit, together with the result, are known, then retrieving the
-target party's secret is easy as it involves solving an equation with $1$ unknown.
+such that at least $s-1$ of the $s$ secret inputs of the circuit, together with the result, are known, then retrieving the
+target party's secret is easy as it involves solving a \textit{1-indeterminate} equation.
 Nevertheless, there is no such problem when honest parties provide $s > 1$ secrets as inputs to the circuit.
 Note that the framework maintains the confidentiality of the target party's input even against an
 \textit{active} adversary who can deviate from the protocol, but it can't ensure correctness.
@@ -56,12 +54,7 @@ Expressions are represented by an AST, where each parent node is an operation an
 To this purpose, we defined a new class, extending the \texttt{Expression} class, called \texttt{Operation}, which has two attributes, \texttt{a} and \texttt{b},
 which are generic expressions (either another operation or an operand), and \texttt{operand\_type}, which describes the kind of operation to be computed on the local values (i.e shares)
 of the operands.
-The implementation of the protocols for addition and multiplication (\texttt{Add-K}, \texttt{Beaver Triplets}) follows the description in the course material.
-
-We modified the \texttt{protocol.py} logic slightly to account for our custom application.
-Our parties can either handle one expression or a list containing two expression, its first element is the nominator
-its second element is the denominator as we have a division in our custom application.
-
+The implementation of the protocols for addition and multiplication (\texttt{Add-K}, \texttt{Beaver Triplets}) follows the description in the course material. It is worth noticing that, both in \texttt{Add-K} and in \texttt{Beaver Triplets} protocols, the constant term is added by the party whose index in the participants list is $0$.
 \section{Performance evaluation}
 All measurements were performed directly on each party and recorded.
 The bytes in and out where measured on every
@@ -121,17 +114,14 @@ Tests were run on the following hardware: Intel core i7-7500U and Intel core i7-
 This specific test was run on an expression containing 60 secrets in the form: $s_1 + s_2 + s+_3 \dots s_{30} * s_{31} *
 s_{32} * \dots*  s_{60}$
 
-For, the data-flow we can see a linear increase for the number of bytes received, and a logarithmic increase for the
+For, the data-flow we can see a linear increase for the number of bytes received, and a logarithmic-like increase for the
 number of bytes sent.
-The computational time increases exponentially as O($n^2$), reflecting the complexity in terms of shares to be fetched during the Beaver Protocol ($n$ parties fetching $2*(n-1)$ messages).
-The linear increase in bytes received is expected as the number of inputs to the Beaver Protocol  required to perform the secret to secret multiplication is linear in the number of parties.
-
+The linear increase in bytes received is expected as the number of inputs (for one party) to the Beaver Protocol required to perform the secret to secret multiplication is linear in the number of parties.
 As far as the bytes sent are concerned, the dominant part of the protocol is represented by the \texttt{init\_secret\_sharing} function where shares are sent to other parties.
 The logarithmic-like increase in bytes sent can be explained by the ratio between the number of shares to send vs the
 number of parties to send these shares to.
-As, the number of secret per party decreases, the number of party to send the secret shares to increases counter balancing
-the decrease.
-More specifically, the number of shares sent is: $\frac{60*(n-1)}{n}$
+More specifically, the number of shares sent is: $\frac{60*(n-1)}{n}$.
+The computational time increases exponentially as O($n^2$), reflecting the complexity in terms of shares to be fetched during the Beaver Protocol ($n$ parties fetching $2*(n-1)$ messages).
 
 
 \subsection{Effect of number of Secret Additions \ref{fig:num_additions}}
@@ -143,7 +133,7 @@ The variance itself ,although increasing as the number of addition increases, do
 \subsection{Effect of Number of Secret Multiplication \ref{fig:num_multiplications}}
 Both dataflow and computation time show a linear increase.
 
-\subsection{Effect of Number of scalars \ref{fig:scalar_add}\ref{fig:scalar_mult}}
+\subsection{Effect of Number of scalars \ref{fig:scalar_add},\ref{fig:scalar_mult}}
 For these we see no significant difference in the number of bytes sent and received.
 this behaviour is explained by the fact that scalars are constants and shared across all parties, meaning that no network
 I/O is required to perform the computation.
@@ -161,8 +151,12 @@ The SMC framework can be used in such scenario by computing the following circui
 In the implementation, students who want to keep their inputs secret will exploit the \texttt{Secret()} class, while those who are not concerned will make use of \texttt{Scalar()}.
 In order to avoid defining a new operation, the division modulo $q$, the numerator and denominator of the fraction will be evaluated as two separate expressions, and then the division will be locally computed by each party.
 As far as privacy flaws are concerned, there is again the problem of a passive adversary being capable of inferring a target party's secret if she manages to compromise all but one secrets.
-A mitigation to such a problem could be enforcing users to keep secret both their grades and credits gained.
-
+A mitigation to such a problem could be the following:
+\begin{itemize}
+   \item Enforce parties to keep both grade and ects secret, such that the equation to solve has at least 2 unknowns.
+   \item Enforce parties to not use the element $0$ as a value, since in this specific case the output result will be the mean of the target party.
+\end{itemize}
+Finally, more sophisticated mechanisms for enhancing privacy (for example adding Laplacian Noise to achieve differential privacy), would be too hard to deploy without severaly degradating utility of the computation (i.e the range of passing grades in Swiss academic system, being $[4,6]$, is too narrow for adding meaningful noise. For example, if the real value of 5.25 is obfuscated by noise such that the differentially-private output becomes 5.5, the mechanism does not guarantee privacy since the perceived difference in grades is rather small. On the other hand, adding too much noise such that the obfuscated output becomes 4.5, will, as stated, compromise the utility of the computation).
 \bibliographystyle{IEEEtran}
 \bibliography{bib}
 \end{document}
