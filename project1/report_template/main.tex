@@ -32,29 +32,26 @@ of the circuit evaluation to be retrieved by the parties.
 \section{Threat model}
 In SMC the main goal of the adversary is to gain knowledge of the inputs used by the participants in the computation of
 the function.
-
-Our framework is secure against \textit{passive} adversaries, meaning that adversaries are capable of eavesdropping
+SMC model is secure against \textit{passive} adversaries, meaning that adversaries are capable of eavesdropping
 the communication between parties and the server and of "corrupting" parties, gaining knowledge of their inputs, without deviating from the protocol.
-Considering a passive adversary who listens to the incoming traffic to the server from a party, using additive secret
-sharing and sampling the shares uniformly at random in $Z_q$ with $q$ prime, the model is information-theoretically secure.
-Considering a passive adversary capable of compromising $n-1$ parties, assuming that dishonest parties collaborate to
+Using additive secret
+sharing, sampling the shares uniformly at random in $Z_q$ with $q$ prime, the model is information-theoretically secure against a passive \textit{MITM}.
+Assuming $n-1$ dishonest parties collaborating to
 infer the input of a target party, the framework results secure (most of the time) in this scenario.
-A privacy problem arises when evaluating the circuit: if the adversary is capable of compromising $t$ out of $n$ parties,
-such that at least $s-1$ of the $s$ secret inputs of the circuit, together with the result, are known, then retrieving the
+A privacy problem arises when observing the circuit output: if the adversary is capable of gaining knowledge of $s-1$ out of $s$ secret inputs of the circuit, then retrieving the
 target party's secret is easy as it involves solving a \textit{1-indeterminate} equation.
-Nevertheless, there is no such problem when honest parties provide $s > 1$ secrets as inputs to the circuit.
 Note that the framework maintains the confidentiality of the target party's input even against an
 \textit{active} adversary who can deviate from the protocol, but it can't ensure correctness.
 
 \section{Implementation details}
 The entry point of the protocol is represented by the \texttt{run} function of the \texttt{SMCParty class}.
-This function will first invoke the \texttt{init\_secret\_sharing} function, which will generate secret shares for each party, for each secret held by the local party.
-Once shares are generated and send privately to the other parties via the server, the party calls the \texttt{process\_expression} function.
+This function will first invoke the \texttt{init\_secret\_sharing} function, which will handle the secret shares generation.
+Once shares are sent privately to the other parties via the server, the party calls the \texttt{process\_expression} function.
 Expressions are represented by an AST, where each parent node is an operation and each leaf is an \texttt{operand}, i.e either a \texttt{Secret} or a \texttt{Scalar}.
 To this purpose, we defined a new class, extending the \texttt{Expression} class, called \texttt{Operation}, which has two attributes, \texttt{a} and \texttt{b},
 which are generic expressions (either another operation or an operand), and \texttt{operand\_type}, which describes the kind of operation to be computed on the local values (i.e shares)
-of the operands.
-The implementation of the protocols for addition and multiplication (\texttt{Add-K}, \texttt{Beaver Triplets}) follows the description in the course material. It is worth noticing that, both in \texttt{Add-K} and in \texttt{Beaver Triplets} protocols, the constant term is added by the party whose index in the participants list is $0$.
+of the operands. \texttt{process\_expression} will then be invoked recursively on \texttt{a} and \texttt{b}.
+The implementation of the protocols for addition and multiplication (\texttt{Add-K}, \texttt{Beaver Triplets}) follows the description in the course material.
 \section{Performance evaluation}
 All measurements were performed directly on each party and recorded.
 The bytes in and out where measured on every
@@ -143,20 +140,12 @@ This is probably due to the fact that since these operations do not require any 
 prone to the CPU computational noise.
 
 \section{Application}
-The SMC framework can be used for the evaluation of circuit whose inputs might contain sensible information.
-A realistic use case scenario is the following: suppose that $n$ students want to compute their average GPA of the semester.
-Some of them, with an high GPA, have no concern in publicly reveling their grades and the amount of credits gained, while other students wish to keep these information private.
-The SMC framework can be used in such scenario by computing the following circuit:
-\[f = \frac{\sum_{i=1}^{n}(grade_{i}*ects_{i})}{\sum_{i=1}^{n}ects_{i}}\]
-In the implementation, students who want to keep their inputs secret will exploit the \texttt{Secret()} class, while those who are not concerned will make use of \texttt{Scalar()}.
-In order to avoid defining a new operation, the division modulo $q$, the numerator and denominator of the fraction will be evaluated as two separate expressions, and then the division will be locally computed by each party.
-As far as privacy flaws are concerned, there is again the problem of a passive adversary being capable of inferring a target party's secret if she manages to compromise all but one secrets.
-A mitigation to such a problem could be the following:
-\begin{itemize}
-   \item Enforce parties to keep both grade and ects secret, such that the equation to solve has at least 2 unknowns.
-   \item Enforce parties to not use the element $0$ as a value, since in this specific case the output result will be the mean of the target party.
-\end{itemize}
-Finally, more sophisticated mechanisms for enhancing privacy (for example adding Laplacian Noise to achieve differential privacy), would be too hard to deploy without severaly degradating utility of the computation (i.e the range of passing grades in Swiss academic system, being $[4,6]$, is too narrow for adding meaningful noise. For example, if the real value of 5.25 is obfuscated by noise such that the differentially-private output becomes 5.5, the mechanism does not guarantee privacy since the perceived difference in grades is rather small. On the other hand, adding too much noise such that the obfuscated output becomes 4.5, will, as stated, compromise the utility of the computation).
+A realistic use case for the framework is computing the average GPA of the semester among $n$ students. The circuit would be the following:
+\[f = \frac{\sum_{i=1}^{n_{parties}}(\sum_{j=1}^{n_{grades}}grade_{ij}*ects_{ij})}{\sum_{i,j}ects_{ij}}\]
+In the implementation, students who do not want to reveal their grades and credits will exploit the \texttt{Secret()} class, otherwise they will make use of \texttt{Scalar()}.
+In order to avoid defining the division modulo $q$, the numerator and denominator of the fraction will be evaluated as two separate expressions, and then the division will be locally computed by each party.
+As far as privacy flaws are concerned, there is again the problem of a passive adversary being capable of inferring a target party's secret (in particular the most sensitive information, the grade) if she manages to compromise all but one secrets.
+Also, taking into account adversary's background knowledge (such as a student having access to the list of other students enrolled in her same course), a mitigation to this problem could be to add noise to the output so to achieve $\epsilon$ \textit{differential-privacy}. Nevertheless, taking into account the narrow range of values the mean can assume, $[0,6]$, this solution will probably compromise the utility of the computation.  
 \bibliographystyle{IEEEtran}
 \bibliography{bib}
 \end{document}
