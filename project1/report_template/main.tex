@@ -46,6 +46,7 @@ Note that the framework maintains the confidentiality of the target party's inpu
 \section{Implementation details}
 The entry point of the protocol is represented by the \texttt{run} function of the \texttt{SMCParty class}.
 This function will first invoke the \texttt{init\_secret\_sharing} function, which will handle the secret shares generation.
+We used the prime number 6700417 to form the $Z_q$ field.
 Once the shares are sent to the other parties via the server, the party calls the \texttt{process\_expression} function.
 Expressions are represented by an AST, where each parent node is an operation and each leaf is an \texttt{operand}, i.e either a \texttt{Secret} or a \texttt{Scalar}.
 To this purpose, we defined a new class, extending the \texttt{Expression} class, called \texttt{Operation}, which has two attributes, \texttt{a} and \texttt{b},
