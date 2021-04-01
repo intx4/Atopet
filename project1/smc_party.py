@@ -123,7 +123,16 @@ class SMCParty:
             elif expr.is_subtraction():
                 a = self.process_expression(a)
                 b = self.process_expression(b)
-                return a - b
+                if a.is_secret_share() and b.is_secret_share():
+                    return a-b
+                elif self.is_additioner_client():
+                    return a - b
+                else:
+                    if a.is_secret_share():
+                        return a
+                    else:
+                        return Share(-b.value, True)
+
             elif expr.is_multiplication():
                 # Distinguish if is a multiplication between two secrets
                 a = self.process_expression(a)
