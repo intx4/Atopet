@@ -19,6 +19,7 @@ from typing import Any, List, Tuple
 from petrelic.multiplicative.pairing import G1, G2, GT, Bn, G1Element, G2Element
 from serialization import jsonpickle
 from binascii import hexlify, unhexlify
+import hashlib
 
 """Public parameters"""
 P = G1.order()
@@ -26,7 +27,7 @@ P = G1.order()
 # Type hint aliases
 # Feel free to change them as you see fit.
 # Maybe at the end, you will not need aliases at all!
-IssueRequest = Any
+IssueRequest = Tuple[G1Element, G1Element, int, int, List[int]] # Commitment C, R proof, c challenge, s and s_prime response
 BlindSignature = Any
 AnonymousCredential = Any
 DisclosureProof = Any
@@ -64,7 +65,7 @@ class SecretKey:
 
 
 class Attribute:
-    def __init__(self, attribute:str):
+    def __init__(self, attribute: str):
         self.attribute = attribute
 
     def to_integer(self):
@@ -154,11 +155,18 @@ def create_issue_request(
 
     *Warning:* You may need to pass state to the `obtain_credential` function -> return t to be kept private
     """
+    g = pk.generator_g1
+    Y = pk.y_g1elem_list
+    t = P.random() #blinding factor
     
-   
+    S = G1.unity()
+    for y,a in zip(Y, user_attributes):
+        S *= y ** a.to_integer()
+    C = (g ** t) * S
+    x1,x2 = C.get_affine_coordinates()
     
+    return (C, pedersen_commitment_nizkp(t, user_attributes, g, Y, str(x1), str(x2))), t
     
-    raise NotImplementedError()
 
 
 def sign_issue_request(
@@ -232,3 +240,29 @@ def convert_msgs(msgs):
     for msg in msgs:
         converted.append(Bn.from_binary(unhexlify(msg)).int())
     return converted
+
+def pedersen_commitment_nizkp(t, attrs, g, Y, x1, x2):
+    d = P.random().int()
+    d_prime = []
+    for _ in range(0, len(Y)):
+        d_prime.append(P.random().int())
+    R = g ** d
+    l = []
+    l.append(g)
+    for y,d_p in zip(Y, d_prime):
+        R *= y ** d_p
+        l.append(str(y))
+    y1, y2 = R.get_affine_coordinates()
+    l.append(str(y1))
+    l.append(str(y2))
+    l.append(x1)
+    l.append(x2)
+    m = '|'.join(l)
+    h = hashlib.sha256()
+    h.update(m.encode())
+    c = int.from_bytes(h.digest())
+    s = t*c + d % P.int()
+    s_prime = []
+    for a, d_p in zip(attrs, d_prime):
+        s_prime.append(a.to_integer()*c + d_p % P.int())
+    return R, c, s , s_prime
