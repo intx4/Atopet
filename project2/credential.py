@@ -69,7 +69,7 @@ class Attribute:
         self.attribute = attribute
 
     def to_integer(self):
-        return int.from_bytes(bytes(self.attribute), 'little')
+        return int.from_bytes(bytes(self.attribute, 'utf-8'), 'little')
 
 
 AttributeMap = List[Attribute]
