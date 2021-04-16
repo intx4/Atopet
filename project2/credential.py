@@ -26,7 +26,6 @@ P = G1.order()
 # Type hint aliases
 # Feel free to change them as you see fit.
 # Maybe at the end, you will not need aliases at all!
-SecretKey = List[int]
 Attribute = Any
 AttributeMap = List[str]
 IssueRequest = Any
@@ -36,7 +35,7 @@ DisclosureProof = Any
 
 
 ######################
-## Classes ##
+##     CLASSES      ##
 ######################
 class Signature:
     def __init__(self, h, h_exp):
@@ -48,10 +47,22 @@ class Signature:
 
 
 class PublicKey:
-    def __init__(self, generator: G2Element, x_group_elem: G2Element, y_list: List[G2Element]):
-        self.generator = generator
-        self.x_group_elem = x_group_elem
-        self.y_list = y_list
+    def __init__(self, g: G1Element, g_t: G2Element, X_t: G2Element,
+                 Y_t: List[G2Element],
+                 Y: List[G1Element]):
+        self.g = g
+        self.g_t = g_t
+        self.X_t = X_t
+        self.Y_t = Y_t
+        self.Y = Y
+
+
+class SecretKey:
+    def __init__(self, x: int, y: List[int], X: G1Element):
+        self.x = x
+        self.y = y
+        self.X = X
+        
 ######################
 ## SIGNATURE SCHEME ##
 ######################
@@ -61,21 +72,25 @@ def generate_key(
         attributes: List[Attribute]
     ) -> Tuple[SecretKey, PublicKey]:
     """ Generate signer key pair """
-    sk = []
-    pk = []
+    Y = []
+    Y_t = []
+    y = []
     
-    generator = G2.generator()
+    g_t = G2.generator()
+    g = G1.generator()
     x = P.random().int()
-    sk.append(x)
-    x_group_elem = generator ** x
+    
+    X = g ** x
+    X_t = g_t ** x
     
     # y1 to yL
     for _ in range(0, len(attributes)):
-        y = P.random().int()
-        sk.append(y)
-        pk.append(generator ** y)
+        y_i = P.random().int()
+        y.append(y_i)
+        Y_t.append(g_t ** y_i)
+        Y.append(g ** y_i)
     
-    return sk, PublicKey(generator, x_group_elem, pk)
+    return SecretKey(x, y, X), PublicKey(g, g_t, X_t, Y_t, Y)
 
 
 def sign(
@@ -87,9 +102,9 @@ def sign(
     converted = convert_msgs(msgs)
     
     h = gen_rand_point(G1)
-    x = sk[0]
+    x = sk.x
     s = 0
-    for y, m in zip(sk[1:], converted):
+    for y, m in zip(sk.y, converted):
         s += y*m
     return Signature(h, (h ** (x + s)))
    
@@ -105,13 +120,13 @@ def verify(
         return False
     
     converted = convert_msgs(msgs)
-    generator = pk.generator
+    g_t = pk.g_t
     S = G1.unity()
-    for Y_t, m in zip(pk.p_key_list, converted):
+    for Y_t, m in zip(pk.Y_t, converted):
         S *= Y_t**m
     
-    S *= pk.x_group_elem
-    return signature.h.pair(S) == signature.h_exp.pair(generator)
+    S *= pk.X_t
+    return signature.h.pair(S) == signature.h_exp.pair(g_t)
 
 
 #################################
@@ -131,7 +146,7 @@ def create_issue_request(
     *Warning:* You may need to pass state to the `obtain_credential` function.
     """
     
-    g = pk[0]
+   
     
     
     raise NotImplementedError()
