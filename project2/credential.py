@@ -37,6 +37,7 @@ DisclosureProof = Any
 ######################
 ##     CLASSES      ##
 ######################
+
 class Signature:
     def __init__(self, h, h_exp):
         self.h: G1Element = h
@@ -138,12 +139,12 @@ def verify(
 def create_issue_request(
         pk: PublicKey,
         user_attributes: AttributeMap
-    ) -> IssueRequest:
+    ) -> (IssueRequest, int):
     """ Create an issuance request
 
     This corresponds to the "user commitment" step in the issuance protocol.
 
-    *Warning:* You may need to pass state to the `obtain_credential` function.
+    *Warning:* You may need to pass state to the `obtain_credential` function -> return t to be kept private
     """
     
    
@@ -167,6 +168,7 @@ def sign_issue_request(
 
 def obtain_credential(
         pk: PublicKey,
+        t: int,
         response: BlindSignature
     ) -> AnonymousCredential:
     """ Derive a credential from the issuer's response
