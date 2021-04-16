@@ -24,10 +24,6 @@ import hashlib
 """Public parameters"""
 P = G1.order()
 
-# Type hint aliases
-# Feel free to change them as you see fit.
-# Maybe at the end, you will not need aliases at all!
-IssueRequest = Tuple[G1Element, G1Element, int, int, List[int]] # Commitment C, R proof, c challenge, s and s_prime response
 BlindSignature = Any
 AnonymousCredential = Any
 DisclosureProof = Any
@@ -71,8 +67,35 @@ class Attribute:
     def to_integer(self):
         return int.from_bytes(bytes(self.attribute, 'utf-8'), 'big')
 
+class IssueRequest:
+    def __init__(self, commitment: G1Element, R: G1Element, chall: int, resp: List[int]):
+        self.commitment = commitment
+        self.R = R
+        self.chall = chall
+        self.resp = resp
+        
+    def verify_ir(self, g, Y):
+        str_R = stringify_point(self.R)
+        str_C = stringify_point(self.commitment)
+        str_g = stringify_point(g)
+        h = []
+        for y in Y:
+            h.append(stringify_point(y))
+        chall_p = form_schnorr_chall(str_g, h, str_R, str_C)
+        if chall_p != self.chall:
+            return False
+        if not self.commitment.is_valid() or not self.R.is_valid():
+            return False
+        
+        A = self.R * (self.commitment ** self.chall)
+        B = (g ** self.resp[0])
+        
+        for y,s in zip(Y, self.resp[1:]):
+            B *= (y ** s)
+        return A == B
 
 AttributeMap = List[Attribute]
+
 ######################
 ## SIGNATURE SCHEME ##
 ######################
@@ -163,9 +186,11 @@ def create_issue_request(
     for y,a in zip(Y, user_attributes):
         S *= y ** a.to_integer()
     C = (g ** t) * S
-    x1,x2 = C.get_affine_coordinates()
     
-    return (C, pedersen_commitment_nizkp(t, user_attributes, g, Y, str(x1), str(x2))), t
+    
+    R, chall, resp = pedersen_commitment_nizkp(t, user_attributes, g, Y, stringify_point(C))
+    
+    return IssueRequest(commitment=C, R=R, chall=chall, resp=resp), t
     
 
 
@@ -219,6 +244,24 @@ def verify_disclosure_proof(
 
 """__HELPERS_______________________________________________________________________________"""
 
+def stringify_point(p):
+    """ Return string representation of EC point """
+    x,y = p.get_affine_coordinates()
+    return str(x.int())+','+str(y.int())
+
+def form_schnorr_chall(g: str, h: List[str], R: str, C: str):
+    """form chall as sha256(g|Y_i|R|C) where R and C are expressed with their coords on the EC"""
+    m = hashlib.sha256()
+    l = []
+    l.append(g)
+    for y in h:
+        l.append(y)
+    l.append(R)
+    l.append(C)
+    sch = '|'.join(l)
+    m.update(sch.encode())
+    return int.from_bytes(m.digest(), byteorder='big')
+
 def gen_rand_point(G, unity=True):
     """ Return a random point in G, G* if unity"""
     while True:
@@ -241,28 +284,20 @@ def convert_msgs(msgs):
         converted.append(Bn.from_binary(unhexlify(msg)).int())
     return converted
 
-def pedersen_commitment_nizkp(t, attrs, g, Y, x1, x2):
+def pedersen_commitment_nizkp(t, attrs, g, Y, str_C):
     d = P.random().int()
     d_prime = []
     for _ in range(0, len(Y)):
         d_prime.append(P.random().int())
     R = g ** d
-    l = []
-    l.append(g)
+    h = []
     for y,d_p in zip(Y, d_prime):
         R *= y ** d_p
-        l.append(str(y))
-    y1, y2 = R.get_affine_coordinates()
-    l.append(str(y1))
-    l.append(str(y2))
-    l.append(x1)
-    l.append(x2)
-    m = '|'.join(l)
-    h = hashlib.sha256()
-    h.update(m.encode())
-    c = int.from_bytes(h.digest())
-    s = t*c + d % P.int()
-    s_prime = []
+        h.append(stringify_point(y))
+
+    chall = form_schnorr_chall(stringify_point(g), h, stringify_point(R), str_C)
+    resp = []
+    resp.append(t * chall + d % P.int())
     for a, d_p in zip(attrs, d_prime):
-        s_prime.append(a.to_integer()*c + d_p % P.int())
-    return R, c, s , s_prime
+        resp.append(a.to_integer()*chall + d_p % P.int())
+    return R, chall, resp
