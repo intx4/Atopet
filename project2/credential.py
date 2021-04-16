@@ -16,7 +16,7 @@ the functions provided to resemble a more object-oriented interface.
 """
 
 from typing import Any, List, Tuple
-from petrelic.multiplicative.pairing import G1, G2, GT, Bn, G1Element, G2Element
+from petrelic.multiplicative.pairing import G1, G2, GT, Bn, G1Element, G2Element, GTElement
 from serialization import jsonpickle
 from binascii import hexlify, unhexlify
 import hashlib
@@ -94,7 +94,7 @@ class IssueRequest:
 
 BlindSignature = Tuple[G1Element, G1Element]
 AnonymousCredential = Tuple[G1Element, G1Element]
-DisclosureProof = Any
+DisclosureProof = GTElement
 AttributeMap = List[Attribute]
 
 ######################
@@ -155,6 +155,7 @@ def verify(
     
     converted = convert_msgs(msgs)
     generator_g2 = pk.generator_g2
+    
     S = G1.neutral_element()
     for Y_t, m in zip(pk.y_g2elem_list, converted):
         S *= Y_t**m
@@ -183,7 +184,7 @@ def create_issue_request(
     Y = pk.y_g1elem_list
     t = P.random() #blinding factor
     
-    S = G1.unity()
+    S = G1.neutral_element()
     for y, a in zip(Y, user_attributes):
         S *= y ** a.to_integer()
     C = (g ** t) * S
@@ -237,7 +238,7 @@ def obtain_credential(
     sigma_2 = response[1]
     
     if sigma_1.is_neutral_element() and sigma_2.is_neutral_element():
-        return None
+        return G1.neutral_element(), G1.neutral_element()
     
     sigma_2_p = sigma_2.div((sigma_1 ** t)) #unblind
     return sigma_1, sigma_2_p
@@ -250,23 +251,36 @@ def create_disclosure_proof(
         credential: AnonymousCredential,
         hidden_attributes: List[Attribute],
         message: bytes
-    ) -> DisclosureProof:
+    ) -> (DisclosureProof, bytes):
     """ Create a disclosure proof """
-    raise NotImplementedError()
-
+    t = P.random().int()
+    r = P.random().int()
+    
+    sigma_p = (credential[0]**r, ((credential[0]**t) * credential[1])**r)
+    
+    g_t = pk.generator_g2
+    Y_t = pk.y_g2elem_list
+    zkp = (sigma_p[0].pair(g_t))**t
+    for y_t, a in zip(Y_t, hidden_attributes):
+        zkp *= (sigma_p[0].pair(y_t))**a.to_integer()
+    
+    return zkp, message
 
 def verify_disclosure_proof(
         pk: PublicKey,
         disclosure_proof: DisclosureProof,
+        disclosed_attributes: AttributeMap,
         message: bytes
     ) -> bool:
     """ Verify the disclosure proof
 
     Hint: The verifier may also want to retrieve the disclosed attributes
     """
-    raise NotImplementedError()
+    zkp =
+    
+    
 
-"""__HELPERS_______________________________________________________________________________"""
+"""########################################## HELPERS ##########################################"""
 
 def stringify_point(p):
     """ Return string representation of EC point """
@@ -309,6 +323,7 @@ def convert_msgs(msgs):
     return converted
 
 def pedersen_commitment_nizkp(t, attrs, g, Y, str_C):
+    """ create a non interactive zkp for pedersen commitment """
     d = P.random().int()
     d_prime = []
     for _ in range(0, len(Y)):
