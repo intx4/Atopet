@@ -27,7 +27,6 @@ P = G1.order()
 # Feel free to change them as you see fit.
 # Maybe at the end, you will not need aliases at all!
 Attribute = Any
-AttributeMap = List[str]
 IssueRequest = Any
 BlindSignature = Any
 AnonymousCredential = Any
@@ -61,9 +60,19 @@ class PublicKey:
 class SecretKey:
     def __init__(self, x_g2_exp: int, y_g2_exp_list: List[int], x_g1elem: G1Element):
         self.x_g2_exp = x_g2_exp
-        self.y_g2_exp_List = y_g2_exp_list
+        self.y_g2_exp_list = y_g2_exp_list
         self.x_g1elem = x_g1elem
-        
+
+
+class Attribute:
+    def __init__(self, attribute:str):
+        self.attribute = attribute
+
+    def to_integer(self):
+        return int.from_bytes(bytes(self.attribute), 'little')
+
+
+AttributeMap = List[Attribute]
 ######################
 ## SIGNATURE SCHEME ##
 ######################
@@ -105,7 +114,7 @@ def sign(
     h = gen_rand_point(G1)
     x = sk.x_g2_exp
     s = 0
-    for y, m in zip(sk.y_g2_exp_List, converted):
+    for y, m in zip(sk.y_g2_exp_list, converted):
         s += y*m
     return Signature(h, (h ** (x + s)))
    
