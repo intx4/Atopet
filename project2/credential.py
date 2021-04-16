@@ -47,21 +47,21 @@ class Signature:
 
 
 class PublicKey:
-    def __init__(self, g: G1Element, g_t: G2Element, X_t: G2Element,
-                 Y_t: List[G2Element],
-                 Y: List[G1Element]):
-        self.g = g
-        self.g_t = g_t
-        self.X_t = X_t
-        self.Y_t = Y_t
-        self.Y = Y
+    def __init__(self, generator_g2: G2Element, x_g2element: G2Element,
+                 y_g2elem_list: List[G2Element], generator_g1: G1Element,
+                 y_g1elem_list: List[G1Element]):
+        self.generator_g1 = generator_g1
+        self.generator_g2 = generator_g2
+        self.x_g2element = x_g2element
+        self.y_g2elem_list = y_g2elem_list
+        self.y_g1elem_list = y_g1elem_list
 
 
 class SecretKey:
-    def __init__(self, x: int, y: List[int], X: G1Element):
-        self.x = x
-        self.y = y
-        self.X = X
+    def __init__(self, x_g2_exp: int, y_g2_exp_list: List[int], x_g1elem: G1Element):
+        self.x_g2_exp = x_g2_exp
+        self.y_g2_exp_List = y_g2_exp_list
+        self.x_g1elem = x_g1elem
         
 ######################
 ## SIGNATURE SCHEME ##
@@ -72,25 +72,25 @@ def generate_key(
         attributes: List[Attribute]
     ) -> Tuple[SecretKey, PublicKey]:
     """ Generate signer key pair """
-    Y = []
-    Y_t = []
-    y = []
+    y_g1_elem_list = []
+    y_g2_elem_list = []
+    y_g2_exp_list = []
     
-    g_t = G2.generator()
-    g = G1.generator()
-    x = P.random().int()
+    g2_generator = G2.generator()
+    g1_generator = G1.generator()
+    x_exp = P.random().int()
     
-    X = g ** x
-    X_t = g_t ** x
+    x_g1element = g1_generator ** x_exp
+    x_g2element = g2_generator ** x_exp
     
     # y1 to yL
     for _ in range(0, len(attributes)):
         y_i = P.random().int()
-        y.append(y_i)
-        Y_t.append(g_t ** y_i)
-        Y.append(g ** y_i)
+        y_g2_exp_list.append(y_i)
+        y_g2_elem_list.append(g2_generator ** y_i)
+        y_g1_elem_list.append(g1_generator ** y_i)
     
-    return SecretKey(x, y, X), PublicKey(g, g_t, X_t, Y_t, Y)
+    return SecretKey(x_exp, y_g2_exp_list, x_g1element), PublicKey(g1_generator, g2_generator, x_g2element, y_g2_elem_list, y_g1_elem_list)
 
 
 def sign(
@@ -102,9 +102,9 @@ def sign(
     converted = convert_msgs(msgs)
     
     h = gen_rand_point(G1)
-    x = sk.x
+    x = sk.x_g2_exp
     s = 0
-    for y, m in zip(sk.y, converted):
+    for y, m in zip(sk.y_g2_exp_List, converted):
         s += y*m
     return Signature(h, (h ** (x + s)))
    
@@ -120,13 +120,13 @@ def verify(
         return False
     
     converted = convert_msgs(msgs)
-    g_t = pk.g_t
+    generator_g2 = pk.generator_g2
     S = G1.unity()
-    for Y_t, m in zip(pk.Y_t, converted):
+    for Y_t, m in zip(pk.y_g2elem_list, converted):
         S *= Y_t**m
     
-    S *= pk.X_t
-    return signature.h.pair(S) == signature.h_exp.pair(g_t)
+    S *= pk.x_g2element
+    return signature.h.pair(S) == signature.h_exp.pair(generator_g2)
 
 
 #################################
