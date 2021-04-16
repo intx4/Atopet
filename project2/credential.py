@@ -27,9 +27,8 @@ P = G1.order()
 # Feel free to change them as you see fit.
 # Maybe at the end, you will not need aliases at all!
 SecretKey = List[int]
-PublicKey = List[G2Element]
 Attribute = Any
-AttributeMap = Any
+AttributeMap = List[str]
 IssueRequest = Any
 BlindSignature = Any
 AnonymousCredential = Any
@@ -47,6 +46,12 @@ class Signature:
     def is_valid(self):
         return self.h.is_valid() and not self.h.is_neutral_element()
 
+
+class PublicKey:
+    def __init__(self, generator: G2Element, x_group_elem: G2Element, y_list: List[G2Element]):
+        self.generator = generator
+        self.x_group_elem = x_group_elem
+        self.y_list = y_list
 ######################
 ## SIGNATURE SCHEME ##
 ######################
@@ -59,19 +64,18 @@ def generate_key(
     sk = []
     pk = []
     
-    g_t = G2.generator()
+    generator = G2.generator()
     x = P.random().int()
     sk.append(x)
-    pk.append(g_t)
-    pk.append(g_t ** x)
+    x_group_elem = generator ** x
     
     # y1 to yL
     for _ in range(0, len(attributes)):
         y = P.random().int()
         sk.append(y)
-        pk.append(g_t ** y)
+        pk.append(generator ** y)
     
-    return sk, pk
+    return sk, PublicKey(generator, x_group_elem, pk)
 
 
 def sign(
@@ -101,14 +105,13 @@ def verify(
         return False
     
     converted = convert_msgs(msgs)
-    g_t = pk[0]
-    X_t = pk[1]
+    generator = pk.generator
     S = G1.unity()
-    for Y_t, m in zip(pk[2:], converted):
+    for Y_t, m in zip(pk.p_key_list, converted):
         S *= Y_t**m
     
-    S *= X_t
-    return signature.h.pair(S) == signature.h_exp.pair(g_t)
+    S *= pk.x_group_elem
+    return signature.h.pair(S) == signature.h_exp.pair(generator)
 
 
 #################################
