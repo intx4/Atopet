@@ -26,7 +26,6 @@ P = G1.order()
 # Type hint aliases
 # Feel free to change them as you see fit.
 # Maybe at the end, you will not need aliases at all!
-Attribute = Any
 IssueRequest = Any
 BlindSignature = Any
 AnonymousCredential = Any
@@ -69,7 +68,7 @@ class Attribute:
         self.attribute = attribute
 
     def to_integer(self):
-        return int.from_bytes(bytes(self.attribute, 'utf-8'), 'little')
+        return int.from_bytes(bytes(self.attribute, 'utf-8'), 'big')
 
 
 AttributeMap = List[Attribute]
