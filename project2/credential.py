@@ -24,11 +24,6 @@ import hashlib
 """Public parameters"""
 P = G1.order()
 
-BlindSignature = Any
-AnonymousCredential = Any
-DisclosureProof = Any
-
-
 ######################
 ##     CLASSES      ##
 ######################
@@ -74,7 +69,8 @@ class IssueRequest:
         self.chall = chall
         self.resp = resp
         
-    def verify_ir(self, g, Y):
+    def is_valid(self, g, Y):
+        #g and Y elements in EC
         str_R = stringify_point(self.R)
         str_C = stringify_point(self.commitment)
         str_g = stringify_point(g)
@@ -94,6 +90,11 @@ class IssueRequest:
             B *= (y ** s)
         return A == B
 
+""" Aliases """
+
+BlindSignature = Tuple[G1Element, G1Element]
+AnonymousCredential = Tuple[G1Element, G1Element]
+DisclosureProof = Any
 AttributeMap = List[Attribute]
 
 ######################
@@ -154,7 +155,7 @@ def verify(
     
     converted = convert_msgs(msgs)
     generator_g2 = pk.generator_g2
-    S = G1.unity()
+    S = G1.neutral_element()
     for Y_t, m in zip(pk.y_g2elem_list, converted):
         S *= Y_t**m
     
@@ -183,7 +184,7 @@ def create_issue_request(
     t = P.random() #blinding factor
     
     S = G1.unity()
-    for y,a in zip(Y, user_attributes):
+    for y, a in zip(Y, user_attributes):
         S *= y ** a.to_integer()
     C = (g ** t) * S
     
@@ -204,9 +205,25 @@ def sign_issue_request(
 
     This corresponds to the "Issuer signing" step in the issuance protocol.
     """
-    raise NotImplementedError()
-
-
+    g = pk.generator_g1
+    Y = pk.y_g1elem_list
+    # verify proof
+    if not request.is_valid(g, Y):
+        return G1.neutral_element(), G1.neutral_element()
+    
+    X = sk.x_g1elem
+    C = request.commitment
+    
+    u = P.random().int()
+    
+    sigma_1 = g ** u
+    sigma_2 = X * C
+    for y, a in zip(Y, issuer_attributes):
+        sigma_2 *= y ** a.to_integer()
+    sigma_2 = sigma_2 ** u
+    
+    return sigma_1, sigma_2
+    
 def obtain_credential(
         pk: PublicKey,
         t: int,
@@ -216,7 +233,14 @@ def obtain_credential(
 
     This corresponds to the "Unblinding signature" step.
     """
-    raise NotImplementedError()
+    sigma_1 = response[0]
+    sigma_2 = response[1]
+    
+    if sigma_1.is_neutral_element() and sigma_2.is_neutral_element():
+        return None
+    
+    sigma_2_p = sigma_2.div((sigma_1 ** t)) #unblind
+    return sigma_1, sigma_2_p
 
 
 ## SHOWING PROTOCOL ##
