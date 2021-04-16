@@ -107,7 +107,7 @@ def verify(
     converted = convert_msgs(msgs)
     generator = pk.generator
     S = G1.unity()
-    for Y_t, m in zip(pk.p_key_list, converted):
+    for Y_t, m in zip(pk.y_list, converted):
         S *= Y_t**m
     
     S *= pk.x_group_elem
