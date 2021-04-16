@@ -28,7 +28,6 @@ P = G1.order()
 # Maybe at the end, you will not need aliases at all!
 SecretKey = List[int]
 PublicKey = List[G2Element]
-Signature = Tuple[G1Element, G1Element]
 Attribute = Any
 AttributeMap = Any
 IssueRequest = Any
@@ -36,6 +35,17 @@ BlindSignature = Any
 AnonymousCredential = Any
 DisclosureProof = Any
 
+
+######################
+## Classes ##
+######################
+class Signature:
+    def __init__(self, h, h_exp):
+        self.h: G1Element = h
+        self.h_exp: G1Element = h_exp
+
+    def is_valid(self):
+        return self.h.is_valid() and not self.h.is_neutral_element()
 
 ######################
 ## SIGNATURE SCHEME ##
@@ -77,7 +87,7 @@ def sign(
     s = 0
     for y, m in zip(sk[1:], converted):
         s += y*m
-    return h, (h ** (x + s))
+    return Signature(h, (h ** (x + s)))
    
 
 def verify(
@@ -87,7 +97,7 @@ def verify(
     ) -> bool:
     """ Verify the signature on a vector of messages """
     
-    if signature[0].is_neutral_element() or not signature[0].is_valid():
+    if not signature.is_valid():
         return False
     
     converted = convert_msgs(msgs)
@@ -98,7 +108,7 @@ def verify(
         S *= Y_t**m
     
     S *= X_t
-    return signature[0].pair(S) == signature[1].pair(g_t)
+    return signature.h.pair(S) == signature.h_exp.pair(g_t)
 
 
 #################################
