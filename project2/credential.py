@@ -103,7 +103,7 @@ AttributeMap = List[Attribute]
 
 
 def generate_key(
-        attributes: List[Attribute]
+        num_attributes: int
     ) -> Tuple[SecretKey, PublicKey]:
     """ Generate signer key pair """
     y_g1_elem_list = []
@@ -118,7 +118,7 @@ def generate_key(
     x_g2element = g2_generator ** x_exp
     
     # y1 to yL
-    for _ in range(0, len(attributes)):
+    for _ in range(0, num_attributes):
         y_i = P.random().int()
         y_g2_exp_list.append(y_i)
         y_g2_elem_list.append(g2_generator ** y_i)
@@ -348,3 +348,11 @@ def pedersen_commitment_nizkp(t, attrs, g, Y, C):
     for a, d_p in zip(attrs, d_prime):
         resp.append(a.to_integer()*chall + d_p % P.int())
     return chall, resp
+
+"""TO DO:
+    I think that in the disclosure proof and stuff, when we receive that message param, that corresponds to
+    a location request. In the handout part 1.3 it says that the disclosure should be linked to this request.
+    It also mentions that we should have also a pub-secret keys pair in the attributes. My guess is that the disclosure
+    proof class should contain: 1- the zkp with the pairings on the credentials, 2- a regular signature (i.e following
+    the signature scheme) of the message with the client sk. The server can verify it with the pk.
+"""

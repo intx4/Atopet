@@ -3,7 +3,7 @@ Classes that you need to complete.
 """
 
 from typing import Any, Dict, List, Union, Tuple
-
+from credential import SecretKey, PublicKey, generate_key
 # Optional import
 from serialization import jsonpickle
 
@@ -13,18 +13,19 @@ State = Any
 
 class Server:
     """Server"""
-
-
-    def __init__(self):
+    def __init__(self, subscriptions: List[str]):
         """
         Server constructor.
         """
         ###############################################
         # TODO: Complete this function.
         ###############################################
-        raise NotImplementedError
-
-
+        self.pk = b"" # keys in serialized form
+        self.sk = b""
+        self.subscriptions = subscriptions
+        
+        self.sk, self.pk = self.generate_ca(subscriptions)
+        
     @staticmethod
     def generate_ca(
             subscriptions: List[str]
@@ -44,11 +45,11 @@ class Server:
             You are free to design this as you see fit, but the return types
             should be encoded as bytes.
         """
-        ###############################################
-        # TODO: Complete this function.
-        ###############################################
-        raise NotImplementedError
-
+        sk, pk = generate_key(len(subscriptions))
+        e_sk = jsonpickle.encode(sk).encode()
+        e_pk = jsonpickle.encode(pk).encode()
+        
+        return e_sk, e_pk
 
     def process_registration(
             self,
@@ -74,7 +75,7 @@ class Server:
         ###############################################
         # TODO: Complete this function.
         ###############################################
-        raise NotImplementedError
+        
 
 
     def check_request_signature(
