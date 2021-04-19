@@ -34,7 +34,8 @@ class Signature:
         self.h_exp: G1Element = h_exp
 
     def is_valid(self):
-        return self.h.is_valid() and not self.h.is_neutral_element()
+        #is_valid should filter out unity
+        return self.h.is_valid() and not self.h.is_neutral_element() and not self.h
 
 
 class PublicKey:
@@ -63,38 +64,37 @@ class Attribute:
         return int.from_bytes(bytes(self.attribute, 'utf-8'), 'big')
 
 class IssueRequest:
-    def __init__(self, commitment: G1Element, R: G1Element, chall: int, resp: List[int]):
+    def __init__(self, commitment: G1Element, chall: int, resp: List[int]):
         self.commitment = commitment
-        self.R = R
         self.chall = chall
         self.resp = resp
         
     def is_valid(self, g, Y):
+        """ Verify nizkp on Pedersen Commitment: i.e reform R and verify that c corresponds to challenge"""
         #g and Y elements in EC
-        str_R = stringify_point(self.R)
-        str_C = stringify_point(self.commitment)
-        str_g = stringify_point(g)
+        R = g ** self.resp[0]
         h = []
-        for y in Y:
-            h.append(stringify_point(y))
-        chall_p = form_schnorr_chall(str_g, h, str_R, str_C)
-        if chall_p != self.chall:
-            return False
-        if not self.commitment.is_valid() or not self.R.is_valid():
-            return False
+        for y, s in zip(Y, self.resp[1:]):
+            R *= y ** s
+            h.append(jsonpickle.encode(y))
+        R *= self.commitment ** (-self.chall % P.int())
+        c = form_schnorr_chall(jsonpickle.encode(g), h, jsonpickle.encode(R), jsonpickle.encode(self.commitment))
         
-        A = self.R * (self.commitment ** self.chall)
-        B = (g ** self.resp[0])
-        
-        for y,s in zip(Y, self.resp[1:]):
-            B *= (y ** s)
-        return A == B
+        if c != self.chall:
+            return False
+        else:
+            return True
+
+class DisclosureProof:
+    def __init__(self, sigma: Tuple[G1Element, G1Element], disclosed_attrs: List[Attribute], proof: GTElement):
+        self.sigma = sigma
+        self.disclosed_attrs = disclosed_attrs
+        self.proof = proof
 
 """ Aliases """
 
 BlindSignature = Tuple[G1Element, G1Element]
 AnonymousCredential = Tuple[G1Element, G1Element]
-DisclosureProof = GTElement
 AttributeMap = List[Attribute]
 
 ######################
@@ -189,10 +189,9 @@ def create_issue_request(
         S *= y ** a.to_integer()
     C = (g ** t) * S
     
+    chall, resp = pedersen_commitment_nizkp(t, user_attributes, g, Y, C)
     
-    R, chall, resp = pedersen_commitment_nizkp(t, user_attributes, g, Y, stringify_point(C))
-    
-    return IssueRequest(commitment=C, R=R, chall=chall, resp=resp), t
+    return IssueRequest(commitment=C, chall=chall, resp=resp), t
     
 
 
@@ -226,7 +225,6 @@ def sign_issue_request(
     return sigma_1, sigma_2
     
 def obtain_credential(
-        pk: PublicKey,
         t: int,
         response: BlindSignature
     ) -> AnonymousCredential:
@@ -249,6 +247,7 @@ def obtain_credential(
 def create_disclosure_proof(
         pk: PublicKey,
         credential: AnonymousCredential,
+        attributes: List[Attribute],
         hidden_attributes: List[Attribute],
         message: bytes
     ) -> (DisclosureProof, bytes):
@@ -256,7 +255,7 @@ def create_disclosure_proof(
     t = P.random().int()
     r = P.random().int()
     
-    sigma_p = (credential[0]**r, ((credential[0]**t) * credential[1])**r)
+    sigma_p = (credential[0]**r, (((credential[0]**t) * credential[1])**r))
     
     g_t = pk.generator_g2
     Y_t = pk.y_g2elem_list
@@ -264,31 +263,40 @@ def create_disclosure_proof(
     for y_t, a in zip(Y_t, hidden_attributes):
         zkp *= (sigma_p[0].pair(y_t))**a.to_integer()
     
-    return zkp, message
+    disclosed = [a for a in attributes if a not in hidden_attributes]
+    
+    return DisclosureProof(sigma_p, disclosed, zkp), message
 
 def verify_disclosure_proof(
         pk: PublicKey,
         disclosure_proof: DisclosureProof,
-        disclosed_attributes: AttributeMap,
+        disclosed_attributes: List[Attribute],
         message: bytes
     ) -> bool:
     """ Verify the disclosure proof
 
     Hint: The verifier may also want to retrieve the disclosed attributes
     """
-    zkp =
+    sigma = disclosure_proof.sigma
+    g_t = pk.generator_g2
+    Y_t = pk.y_g2elem_list
+    X_t = pk.x_g2element
     
+    zkp = sigma[1].pair(g_t)
+    for y_t, a in zip(Y_t, disclosed_attributes):
+        zkp *= sigma[0].pair(y_t) ** (- a.to_integer() % P.int())
+    zkp = zkp.div(sigma[0].pair(X_t))
+
+    if zkp != disclosure_proof.proof:
+        return False
+    else:
+        return True
     
 
 """########################################## HELPERS ##########################################"""
 
-def stringify_point(p):
-    """ Return string representation of EC point """
-    x,y = p.get_affine_coordinates()
-    return str(x.int())+','+str(y.int())
-
 def form_schnorr_chall(g: str, h: List[str], R: str, C: str):
-    """form chall as sha256(g|Y_i|R|C) where R and C are expressed with their coords on the EC"""
+    """form chall as sha256(g|Y_i|R|C) where R and C are encoded with jsonpickle"""
     m = hashlib.sha256()
     l = []
     l.append(g)
@@ -305,8 +313,8 @@ def gen_rand_point(G, unity=True):
     while True:
         k = P.random().int()
         Q = G.generator()
-        H = k * Q
-        if not H.is_infinity() and not H.is_neutral_element() and H.is_valid:
+        H = Q ** k
+        if not H.is_neutral_element() and H.is_valid:
             if unity:
                 try:
                     I = H.inverse()
@@ -322,7 +330,7 @@ def convert_msgs(msgs):
         converted.append(Bn.from_binary(unhexlify(msg)).int())
     return converted
 
-def pedersen_commitment_nizkp(t, attrs, g, Y, str_C):
+def pedersen_commitment_nizkp(t, attrs, g, Y, C):
     """ create a non interactive zkp for pedersen commitment """
     d = P.random().int()
     d_prime = []
@@ -332,11 +340,11 @@ def pedersen_commitment_nizkp(t, attrs, g, Y, str_C):
     h = []
     for y,d_p in zip(Y, d_prime):
         R *= y ** d_p
-        h.append(stringify_point(y))
+        h.append(jsonpickle.encode(y))
 
-    chall = form_schnorr_chall(stringify_point(g), h, stringify_point(R), str_C)
+    chall = form_schnorr_chall(jsonpickle.encode(g), h, jsonpickle.encode(R), jsonpickle.encode(C))
     resp = []
     resp.append(t * chall + d % P.int())
     for a, d_p in zip(attrs, d_prime):
         resp.append(a.to_integer()*chall + d_p % P.int())
-    return R, chall, resp
+    return chall, resp
