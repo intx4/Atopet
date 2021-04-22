@@ -3,12 +3,14 @@ Classes that you need to complete.
 """
 
 from typing import Any, Dict, List, Union, Tuple
+from credential import Attribute
 from credential import SecretKey, PublicKey, generate_key
+from credential import IssueRequest, create_issue_request, sign_issue_request
 # Optional import
 from serialization import jsonpickle
 
 # Type aliases
-State = Any
+State = int #blinding factor
 
 
 class Server:
@@ -72,12 +74,15 @@ class Server:
             serialized response (the client should be able to build a
                 credential with this response).
         """
-        ###############################################
-        # TODO: Complete this function.
-        ###############################################
+        request = jsonpickle.decode(issuance_request.decode(), classes=IssueRequest)
+        sk = jsonpickle.decode(server_sk.decode())
+        pk = jsonpickle.decode(server_pk.decode())
         
-
-
+        attrs = [Attribute(a) for a in subscriptions]
+        sigma = sign_issue_request(sk, pk, request, attrs)
+        
+        return jsonpickle.encode(sigma).encode()
+    
     def check_request_signature(
         self,
         server_pk: bytes,
@@ -135,12 +140,12 @@ class Client:
                 from prepare_registration to proceed_registration_response.
                 You need to design the state yourself.
         """
-        ###############################################
-        # TODO: Complete this function.
-        ###############################################
-        raise NotImplementedError
-
-
+        pk = jsonpickle.decode(server_pk.decode())
+        attrs = [Attribute(a) for a in subscriptions]
+        request, t = create_issue_request(pk, attrs)
+        
+        return jsonpickle.encode(request).encode(), t
+        
     def process_registration_response(
             self,
             server_pk: bytes,
