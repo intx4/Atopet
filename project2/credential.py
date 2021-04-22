@@ -39,8 +39,8 @@ class Signature:
 
 
 class PublicKey:
-    def __init__(self, generator_g2: G2Element, x_g2element: G2Element,
-                 y_g2elem_list: List[G2Element], generator_g1: G1Element,
+    def __init__(self, generator_g1: G1Element, generator_g2: G2Element, x_g2element: G2Element,
+                 y_g2elem_list: List[G2Element],
                  y_g1elem_list: List[G1Element]):
         self.generator_g1 = generator_g1
         self.generator_g2 = generator_g2
@@ -124,7 +124,8 @@ def generate_key(
         y_g2_elem_list.append(g2_generator ** y_i)
         y_g1_elem_list.append(g1_generator ** y_i)
     
-    return SecretKey(x_exp, y_g2_exp_list, x_g1element), PublicKey(g1_generator, g2_generator, x_g2element, y_g2_elem_list, y_g1_elem_list)
+    return SecretKey(x_exp, y_g2_exp_list, x_g1element), PublicKey(g1_generator, g2_generator, x_g2element,
+                                                                   y_g2_elem_list, y_g1_elem_list)
 
 
 def sign(
