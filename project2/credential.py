@@ -48,7 +48,6 @@ class PublicKey:
         self.y_g2elem_list = y_g2elem_list
         self.y_g1elem_list = y_g1elem_list
 
-
 class SecretKey:
     def __init__(self, x_g2_exp: int, y_g2_exp_list: List[int], x_g1elem: G1Element):
         self.x_g2_exp = x_g2_exp
@@ -100,7 +99,6 @@ AttributeMap = List[Attribute]
 ######################
 ## SIGNATURE SCHEME ##
 ######################
-
 
 def generate_key(
         num_attributes: int
@@ -347,7 +345,7 @@ def pedersen_commitment_nizkp(t, attrs, g, Y, C):
     return chall, resp
 
 """TO DO:
-    I think that in the disclosure proof and stuff, when we receive that message param, that corresponds
+    1 - I think that in the disclosure proof and stuff, when we receive that message param, that corresponds
     to a location request. In the handout part 1.3 it says that the disclosure should be linked to
     this request. It also mentions that we should have also a pub-secret keys pair in the attributes.
     My guess is that the disclosure proof class should contain: 1- the zkp with the pairings on
@@ -360,4 +358,14 @@ def pedersen_commitment_nizkp(t, attrs, g, Y, C):
         disclosed attributes,
         message,
         message_signature (with user pk to be verified with the signature scheme),
+        
+    2 - Do we need to encrypt the request (message in create_disclosure_proof)
+    
+    Are subscriptions public or private attributes?
+    What do you mean by: A common ABC practice is to include a secret key in the credential as
+    an attribute. You should follow this practice and include a secret key in the
+    credential. (Hint: Users should not reveal their secret key.)A common ABC practice is to include a secret key in the credential as
+    an attribute. You should follow this practice and include a secret key in the
+    credential. (Hint: Users should not reveal their secret key.)
+    What do you mean by client having a public and a private key? What do they need to sign?
 """

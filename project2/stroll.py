@@ -15,7 +15,7 @@ State = int #blinding factor
 
 class Server:
     """Server"""
-    def __init__(self, subscriptions: List[str]):
+    def __init__(self):
         """
         Server constructor.
         """
@@ -24,7 +24,6 @@ class Server:
         ###############################################
         self.pk = b"" # keys in serialized form
         self.sk = b""
-        self.subscriptions = subscriptions
         
         self.sk, self.pk = self.generate_ca(subscriptions)
         
@@ -59,7 +58,7 @@ class Server:
             server_pk: bytes,
             issuance_request: bytes,
             username: str,
-            subscriptions: List[str]
+            subscriptions: List[str] #disclo
         ) -> bytes:
         """ Registers a new account on the server.
 
