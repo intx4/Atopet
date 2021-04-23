@@ -2,16 +2,26 @@
 Classes that you need to complete.
 """
 
-from typing import Any, Dict, List, Union, Tuple
-from credential import SecretKey, PublicKey, generate_key
-from credential import IssueRequest, create_issue_request, sign_issue_request
+from credential import *
 # Optional import
 from serialization import jsonpickle
 from server import PUBLIC_KEY, SECRET_KEY
 
 # Type aliases
-State = (int, int) #(blinding_factor, private_key)
+class State:
+    """ Private state after issue request """
+    def __init__(self, t, private_key, attribute_map):
+        self.blinding_factor = t
+        self.private_key = private_key
+        self.attribute_map = attribute_map
 
+class ABC:
+    """ Attribute based credential to be dumped to file """
+    def __init__(self, client_sk: int, client_attrs: AttributeMap, signature: Signature):
+        self.client_sk = client_sk
+        self.client_attrs = client_attrs
+        self.sigma = signature.sigma
+        
 class Server:
     """Server"""
     PUBLIC_KEY = PublicKey
@@ -74,9 +84,10 @@ class Server:
             serialized response (the client should be able to build a
                 credential with this response).
         """
+        subscriptions.append(username) #accordingly to server.py setup phase
         request = jsonpickle.decode(issuance_request.decode(), classes=IssueRequest)
-        sk = jsonpickle.decode(server_sk.decode())
-        pk = jsonpickle.decode(server_pk.decode())
+        sk = jsonpickle.decode(server_sk.decode(), classes=SecretKey)
+        pk = jsonpickle.decode(server_pk.decode(), classes=PublicKey)
         
         sigma = sign_issue_request(sk, pk, request, subscriptions)
         
@@ -100,10 +111,9 @@ class Server:
         Returns:
             whether a signature is valid
         """
-        ###############################################
-        # TODO: Complete this function.
-        ###############################################
-        raise NotImplementedError
+        pk = jsonpickle.decode(server_pk.decode(), classes=PublicKey)
+        disclosure_proof = jsonpickle.decode(signature.decode(), classes=DisclosureProof)
+        return verify_disclosure_proof(pk, disclosure_proof, revealed_attributes, message)
 
 
 class Client:
@@ -116,13 +126,12 @@ class Client:
         ###############################################
         # TODO: Complete this function.
         ###############################################
-        # self.private_key = G1.order().random().int()
 
 
     def prepare_registration(
             self,
             server_pk: bytes,
-            username: str,
+            username: str, #useless here
             subscriptions: List[str],
         ) -> Tuple[bytes, State]:
         """Prepare a request to register a new account on the server.
@@ -146,7 +155,7 @@ class Client:
         
     def process_registration_response(
             self,
-            server_pk: bytes,
+            server_pk: bytes, #useless
             server_response: bytes,
             private_state: State
         ) -> bytes:
@@ -161,10 +170,17 @@ class Client:
         Return:
             credentials: create an attribute-based credential for the user
         """
-        ###############################################
-        # TODO: Complete this function.
-        ###############################################
-        raise NotImplementedError
+        
+        response = jsonpickle.decode(server_response.decode(), classes=Signature)
+        t = private_state.blinding_factor
+        client_attributes = private_state.attribute_map
+        client_sk = private_state.private_key
+        
+        signature = obtain_credential(t, response)
+        
+        credentials = ABC(client_sk=client_sk, client_attrs=client_attributes, signature=signature)
+        
+        return jsonpickle.encode(credentials).encode()
 
 
     def sign_request(
@@ -185,7 +201,8 @@ class Client:
         Returns:
             A message's signature (serialized)
         """
-        ###############################################
-        # TODO: Complete this function.
-        ###############################################
-        raise NotImplementedError
+        pk = jsonpickle.decode(server_pk.decode(), classes=PublicKey)
+        anon_creds = jsonpickle.decode(credentials.decode(), classes=ABC)
+        request = create_disclosure_proof(pk, anon_creds.sigma, anon_creds.client_sk, anon_creds.client_attrs, types, message)
+        
+        return jsonpickle.encode(request).encode()
