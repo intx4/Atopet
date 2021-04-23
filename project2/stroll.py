@@ -123,6 +123,7 @@ class Client:
             self,
             server_pk: bytes,
             username: str,
+            subscriptions: List[str],
         ) -> Tuple[bytes, State]:
         """Prepare a request to register a new account on the server.
 
@@ -139,9 +140,9 @@ class Client:
                 You need to design the state yourself.
         """
         pk = jsonpickle.decode(server_pk.decode())
-        request, t = create_issue_request(pk)
+        request, state = create_issue_request(pk, subscriptions)
         
-        return jsonpickle.encode(request).encode(), t
+        return jsonpickle.encode(request).encode(), state
         
     def process_registration_response(
             self,
