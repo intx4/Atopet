@@ -8,6 +8,7 @@ from credential import SecretKey, PublicKey, generate_key
 from credential import IssueRequest, create_issue_request, sign_issue_request
 # Optional import
 from serialization import jsonpickle
+from server import PUBLIC_KEY, SECRET_KEY
 
 # Type aliases
 State = int #blinding factor
@@ -15,19 +16,20 @@ State = int #blinding factor
 
 class Server:
     """Server"""
-    def __init__(self, subscriptions: List[str]):
+    PUBLIC_KEY = PublicKey
+    SECRET_KEY = SecretKey
+    def __init__(self):
         """
         Server constructor.
         """
         ###############################################
         # TODO: Complete this function.
         ###############################################
-        self.pk = b"" # keys in serialized form
-        self.sk = b""
-        self.subscriptions = subscriptions
-        
-        self.sk, self.pk = self.generate_ca(subscriptions)
-        
+        if PUBLIC_KEY is None or SECRET_KEY is None:
+            raise ValueError("Public or Secret ye not set")
+        Server.PUBLIC_KEY = PUBLIC_KEY
+        Server.SECRET_KEY = SECRET_KEY
+
     @staticmethod
     def generate_ca(
             subscriptions: List[str]
@@ -47,7 +49,7 @@ class Server:
             You are free to design this as you see fit, but the return types
             should be encoded as bytes.
         """
-        sk, pk = generate_key(len(subscriptions))
+        sk, pk = generate_key(subscriptions)
         e_sk = jsonpickle.encode(sk).encode()
         e_pk = jsonpickle.encode(pk).encode()
         
@@ -124,7 +126,6 @@ class Client:
             self,
             server_pk: bytes,
             username: str,
-            subscriptions: List[str]
         ) -> Tuple[bytes, State]:
         """Prepare a request to register a new account on the server.
 
@@ -141,8 +142,7 @@ class Client:
                 You need to design the state yourself.
         """
         pk = jsonpickle.decode(server_pk.decode())
-        attrs = [Attribute(a) for a in subscriptions]
-        request, t = create_issue_request(pk, attrs)
+        request, t = create_issue_request(pk)
         
         return jsonpickle.encode(request).encode(), t
         

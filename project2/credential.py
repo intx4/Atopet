@@ -38,15 +38,23 @@ class Signature:
         return self.h.is_valid() and not self.h.is_neutral_element() and not self.h
 
 
+class Attribute:
+    def __init__(self, attribute: str):
+        self.attribute = attribute
+
+    def to_integer(self):
+        return int.from_bytes(bytes(self.attribute, 'utf-8'), 'big')
+
 class PublicKey:
     def __init__(self, generator_g1: G1Element, generator_g2: G2Element, x_g2element: G2Element,
                  y_g2elem_list: List[G2Element],
-                 y_g1elem_list: List[G1Element]):
+                 y_g1elem_list: List[G1Element], subscriptions: List[Attribute]):
         self.generator_g1 = generator_g1
         self.generator_g2 = generator_g2
         self.x_g2element = x_g2element
         self.y_g2elem_list = y_g2elem_list
         self.y_g1elem_list = y_g1elem_list
+        self.subscriptions = subscriptions;
 
 
 class SecretKey:
@@ -55,13 +63,6 @@ class SecretKey:
         self.y_g2_exp_list = y_g2_exp_list
         self.x_g1elem = x_g1elem
 
-
-class Attribute:
-    def __init__(self, attribute: str):
-        self.attribute = attribute
-
-    def to_integer(self):
-        return int.from_bytes(bytes(self.attribute, 'utf-8'), 'big')
 
 class IssueRequest:
     def __init__(self, commitment: G1Element, chall: int, resp: List[int]):
@@ -101,9 +102,12 @@ AttributeMap = List[Attribute]
 ## SIGNATURE SCHEME ##
 ######################
 
-
+'''
+subsription = ['gym', 'rest', 'parc']
+pubkey.y_g2_elem = [Y1,Y2,Y3,Y4]
+'''
 def generate_key(
-        num_attributes: int
+        subscriptions: List[str],
     ) -> Tuple[SecretKey, PublicKey]:
     """ Generate signer key pair """
     y_g1_elem_list = []
@@ -118,52 +122,14 @@ def generate_key(
     x_g2element = g2_generator ** x_exp
     
     # y1 to yL
-    for _ in range(0, num_attributes):
+    for _ in range(0, len(subscriptions)+1):
         y_i = P.random().int()
         y_g2_exp_list.append(y_i)
         y_g2_elem_list.append(g2_generator ** y_i)
         y_g1_elem_list.append(g1_generator ** y_i)
-    
+    attributes = [Attribute(s) for s in subscriptions]
     return SecretKey(x_exp, y_g2_exp_list, x_g1element), PublicKey(g1_generator, g2_generator, x_g2element,
-                                                                   y_g2_elem_list, y_g1_elem_list)
-
-
-def sign(
-        sk: SecretKey,
-        msgs: List[bytes]
-    ) -> Signature:
-    """ Sign the vector of messages `msgs` """
-    
-    converted = convert_msgs(msgs)
-    
-    h = gen_rand_point(G1)
-    x = sk.x_g2_exp
-    s = 0
-    for y, m in zip(sk.y_g2_exp_list, converted):
-        s += y*m
-    return Signature(h, (h ** (x + s)))
-   
-
-def verify(
-        pk: PublicKey,
-        signature: Signature,
-        msgs: List[bytes]
-    ) -> bool:
-    """ Verify the signature on a vector of messages """
-    
-    if not signature.is_valid():
-        return False
-    
-    converted = convert_msgs(msgs)
-    generator_g2 = pk.generator_g2
-    
-    S = G1.neutral_element()
-    for Y_t, m in zip(pk.y_g2elem_list, converted):
-        S *= Y_t**m
-    
-    S *= pk.x_g2element
-    return signature.h.pair(S) == signature.h_exp.pair(generator_g2)
-
+                                                                   y_g2_elem_list, y_g1_elem_list, attributes)
 
 #################################
 ## ATTRIBUTE-BASED CREDENTIALS ##
