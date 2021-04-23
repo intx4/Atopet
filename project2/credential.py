@@ -18,11 +18,11 @@ the functions provided to resemble a more object-oriented interface.
 from typing import Any, List, Tuple
 from petrelic.multiplicative.pairing import G1, G2, GT, Bn, G1Element, G2Element, GTElement
 from serialization import jsonpickle
-from binascii import hexlify, unhexlify
+from ordered_set import OrderedSet
 import hashlib
 
 """Public parameters"""
-P = G1.order()
+GROUP_ORDER = G1.order()
 
 ######################
 ##     CLASSES      ##
@@ -39,14 +39,41 @@ class Signature:
 
 
 class PublicKey:
+    SUBSCRIBED_YES = 3
+    SUBSCRIBED_NO = 5
+
     def __init__(self, generator_g1: G1Element, generator_g2: G2Element, x_g2element: G2Element,
-                 y_g2elem_list: List[G2Element],
-                 y_g1elem_list: List[G1Element]):
+                 y_g2elem_list: List[G2Element], y_g1elem_list: List[G1Element], subscriptions: List[str]):
         self.generator_g1 = generator_g1
         self.generator_g2 = generator_g2
         self.x_g2element = x_g2element
         self.y_g2elem_list = y_g2elem_list
         self.y_g1elem_list = y_g1elem_list
+        self.subscriptions = OrderedSet(subscriptions)
+        if len(subscriptions) + 1 != len(y_g2elem_list):
+            raise Exception('The number of attributes for subscription is not 1 less than the number of public keys')
+
+    def generate_signed_attributes(self, subscriptions):
+        client_subscriptions_set = set(subscriptions)
+        index = 0
+        signed_attributes = G1.neutral_element()
+        for server_valid_subscription in self.subscriptions:
+            if server_valid_subscription in client_subscriptions_set:
+                signed_attributes *= self.y_g2elem_list[index]**PublicKey.SUBSCRIBED_YES
+                client_subscriptions_set.remove(server_valid_subscription)
+            else:
+                signed_attributes *= self.y_g2elem_list[index]**PublicKey.SUBSCRIBED_NO
+            index += 1
+        if len(client_subscriptions_set) != 0:
+            raise Exception("Invalid subscription entered in: " + client_subscriptions_set)
+        return signed_attributes
+
+    def get_hidden_public_key_list_init_cred_request(self):
+        return [self.y_g2elem_list[-1]]
+
+
+
+
 
 class SecretKey:
     def __init__(self, x_g2_exp: int, y_g2_exp_list: List[int], x_g1elem: G1Element):
@@ -76,7 +103,7 @@ class IssueRequest:
         for y, s in zip(Y, self.resp[1:]):
             R *= y ** s
             h.append(jsonpickle.encode(y))
-        R *= self.commitment ** (-self.chall % P.int())
+        R *= self.commitment ** (-self.chall % GROUP_ORDER.int())
         c = form_schnorr_chall(jsonpickle.encode(g), h, jsonpickle.encode(R), jsonpickle.encode(self.commitment))
         
         if c != self.chall:
@@ -84,50 +111,24 @@ class IssueRequest:
         else:
             return True
 
-class PedersenNIZKP:
-    def __init__(self, g, h, R, com, chall, resp, msg):
-        self.g = g
-        self.h = h
-        self.R = R
-        self.commitment = com
-        self.chall = chall
-        self.resp = resp
-        self.message = msg
-
-        def is_valid(self, com, g, h, msg):
-            """ Verify nizkp on Pedersen Commitment: i.e reform R and verify that c corresponds to challenge"""
-            # g and Y elements in EC
-            R = g ** self.resp[0]
-            h_encoded = []
-            for h_i, s in zip(h, self.resp[1:]):
-                R *= h_i ** s
-                h_encoded.append(jsonpickle.encode(h_i))
-            R *= com ** (-self.chall % P.int())
-            c = form_schnorr_chall(jsonpickle.encode(g), h_encoded, jsonpickle.encode(R), jsonpickle.encode(com), msg)
-    
-            if c != self.chall:
-                return False
-            else:
-                return True
-        
 class DisclosureProof:
-    def __init__(self, sigma: Tuple[G1Element, G1Element], disclosed_attrs: List[Attribute], proof: PedersenNIZKP):
-        self.sigma = sigma #it's the randomize credential
+    def __init__(self, sigma: Tuple[G1Element, G1Element], disclosed_attrs: List[str], proof: GTElement):
+        self.sigma = sigma
         self.disclosed_attrs = disclosed_attrs
-        self.proof = proof #it's the proof on the Pedersen Commitment
+        self.proof = proof
 
 """ Aliases """
 
 BlindSignature = Tuple[G1Element, G1Element]
 AnonymousCredential = Tuple[G1Element, G1Element]
-AttributeMap = List[Attribute]
+AttributeMap = List[str]
 
 ######################
 ## SIGNATURE SCHEME ##
 ######################
 
 def generate_key(
-        num_attributes: int
+        subscriptions: List[str],
     ) -> Tuple[SecretKey, PublicKey]:
     """ Generate signer key pair """
     y_g1_elem_list = []
@@ -136,58 +137,19 @@ def generate_key(
     
     g2_generator = G2.generator()
     g1_generator = G1.generator()
-    x_exp = P.random().int()
+    x_exp = GROUP_ORDER.random().int()
     
     x_g1element = g1_generator ** x_exp
     x_g2element = g2_generator ** x_exp
     
     # y1 to yL
-    for _ in range(0, num_attributes):
-        y_i = P.random().int()
+    for _ in range(0, len(subscriptions)+1):
+        y_i = GROUP_ORDER.random().int()
         y_g2_exp_list.append(y_i)
         y_g2_elem_list.append(g2_generator ** y_i)
         y_g1_elem_list.append(g1_generator ** y_i)
-    
     return SecretKey(x_exp, y_g2_exp_list, x_g1element), PublicKey(g1_generator, g2_generator, x_g2element,
-                                                                   y_g2_elem_list, y_g1_elem_list)
-
-
-def sign(
-        sk: SecretKey,
-        msgs: List[bytes]
-    ) -> Signature:
-    """ Sign the vector of messages `msgs` """
-    
-    converted = convert_msgs(msgs)
-    
-    h = gen_rand_point(G1)
-    x = sk.x_g2_exp
-    s = 0
-    for y, m in zip(sk.y_g2_exp_list, converted):
-        s += y*m
-    return Signature(h, (h ** (x + s)))
-   
-
-def verify(
-        pk: PublicKey,
-        signature: Signature,
-        msgs: List[bytes]
-    ) -> bool:
-    """ Verify the signature on a vector of messages """
-    
-    if not signature.is_valid():
-        return False
-    
-    converted = convert_msgs(msgs)
-    generator_g2 = pk.generator_g2
-    
-    S = G1.neutral_element()
-    for Y_t, m in zip(pk.y_g2elem_list, converted):
-        S *= Y_t**m
-    
-    S *= pk.x_g2element
-    return signature.h.pair(S) == signature.h_exp.pair(generator_g2)
-
+                                                                   y_g2_elem_list, y_g1_elem_list, subscriptions)
 
 #################################
 ## ATTRIBUTE-BASED CREDENTIALS ##
@@ -197,7 +159,6 @@ def verify(
 
 def create_issue_request(
         pk: PublicKey,
-        user_attributes: AttributeMap
     ) -> (IssueRequest, int):
     """ Create an issuance request
 
@@ -207,22 +168,21 @@ def create_issue_request(
     """
     g = pk.generator_g1
     Y = pk.y_g1elem_list
-    t = P.random().int() #blinding factor
-    
-    S = G1.neutral_element()
-    for y, a in zip(Y, user_attributes):
-        S *= y ** a.to_integer()
+    t = GROUP_ORDER.random().int() #blinding factor
+    private_key = GROUP_ORDER.random().int()
+    S = G1.neutral_element()*pk.get_hidden_public_key_list_init_cred_request()[0]**private_key
+
     C = (g ** t) * S
     
-    chall, resp = pedersen_commitment_nizkp(t, user_attributes, g, Y, C)
+    chall, resp = pedersen_commitment_nizkp(t, private_key, g, Y, C)
     
-    return IssueRequest(commitment=C, chall=chall, resp=resp), t
+    return IssueRequest(commitment=C, chall=chall, resp=resp), (t,private_key)
 
 def sign_issue_request(
         sk: SecretKey,
         pk: PublicKey,
         request: IssueRequest,
-        issuer_attributes: AttributeMap
+        client_subscriptions: AttributeMap
     ) -> BlindSignature:
     """ Create a signature corresponding to the user's request
 
@@ -237,12 +197,11 @@ def sign_issue_request(
     X = sk.x_g1elem
     C = request.commitment
     
-    u = P.random().int()
+    u = GROUP_ORDER.random().int()
     
     sigma_1 = g ** u
     sigma_2 = X * C
-    for y, a in zip(Y, issuer_attributes):
-        sigma_2 *= y ** a.to_integer()
+    sigma_2 *= pk.generate_signed_attributes(client_subscriptions)
     sigma_2 = sigma_2 ** u
     
     return sigma_1, sigma_2
@@ -267,16 +226,17 @@ def obtain_credential(
 
 ## SHOWING PROTOCOL ##
 
+# TODO check how it works
 def create_disclosure_proof(
         pk: PublicKey,
         credential: AnonymousCredential,
-        attributes: List[Attribute],
-        hidden_attributes: List[Attribute],
+        attributes: List[str],
+        hidden_attributes: List[str],
         message: bytes
     ) -> (DisclosureProof, bytes):
     """ Create a disclosure proof """
-    t = P.random().int()
-    r = P.random().int()
+    t = GROUP_ORDER.random().int()
+    r = GROUP_ORDER.random().int()
     
     #randomized credential
     sigma_p = (credential[0]**r, (((credential[0]**t) * credential[1])**r))
@@ -303,7 +263,7 @@ def create_disclosure_proof(
 def verify_disclosure_proof(
         pk: PublicKey,
         disclosure_proof: DisclosureProof,
-        disclosed_attributes: List[Attribute],
+        disclosed_attributes: List[str],
         message: bytes
     ) -> bool:
     """ Verify the disclosure proof
@@ -317,7 +277,7 @@ def verify_disclosure_proof(
     
     zkp = sigma[1].pair(g_t)
     for y_t, a in zip(Y_t, disclosed_attributes):
-        zkp *= sigma[0].pair(y_t) ** (- a.to_integer() % P.int())
+        zkp *= sigma[0].pair(y_t) ** (- a.to_integer() % GROUP_ORDER.int())
     zkp = zkp.div(sigma[0].pair(X_t))
 
     if zkp != disclosure_proof.proof:
@@ -328,10 +288,23 @@ def verify_disclosure_proof(
 
 """########################################## HELPERS ##########################################"""
 
+def form_schnorr_chall(g: str, h: List[str], R: str, C: str):
+    """form chall as sha256(g|Y_i|R|C) where R and C are encoded with jsonpickle"""
+    m = hashlib.sha256()
+    l = []
+    l.append(g)
+    for y in h:
+        l.append(y)
+    l.append(R)
+    l.append(C)
+    sch = '|'.join(l)
+    m.update(sch.encode())
+    return int.from_bytes(m.digest(), byteorder='big')
+
 def gen_rand_point(G, unity=True):
     """ Return a random point in G, G* if unity"""
     while True:
-        k = P.random().int()
+        k = GROUP_ORDER.random().int()
         Q = G.generator()
         H = Q ** k
         if not H.is_neutral_element() and H.is_valid:
@@ -349,10 +322,14 @@ def convert_msgs(msgs):
     return [Attribute(msg.decode()).to_integer() for msg in msgs]
 
 def pedersen_commitment_nizkp(t, attrs, g, h, com, msg):
+def pedersen_commitment_nizkp(t, attrs, g, Y, C):
     """ create a non interactive zkp for pedersen commitment """
+    d = GROUP_ORDER.random().int()
     #extract randomizers
     d = P.random().int()
     d_prime = []
+    for _ in range(0, len(Y)):
+        d_prime.append(GROUP_ORDER.random().int())
     for _ in range(0, len(h)):
         d_prime.append(P.random().int())
     R = g ** d
@@ -367,9 +344,9 @@ def pedersen_commitment_nizkp(t, attrs, g, h, com, msg):
     
     #form responses
     resp = []
-    resp.append(t * chall + d % P.int())
+    resp.append(t * chall + d % GROUP_ORDER.int())
     for a, d_p in zip(attrs, d_prime):
-        resp.append(a.to_integer()*chall + d_p % P.int())
+        resp.append(a.to_integer() * chall + d_p % GROUP_ORDER.int())
     return chall, resp
 
 
@@ -389,7 +366,7 @@ def form_schnorr_chall(g: str, h: List[str], R: str, com: str, msg:str):
     m.update(sch.encode())
     return int.from_bytes(m.digest(), byteorder='big')
 """TO DO:
-    1 - I think that in the disclosure proof and stuff, when we receive that message param, that corresponds
+    I think that in the disclosure proof and stuff, when we receive that message param, that corresponds
     to a location request. In the handout part 1.3 it says that the disclosure should be linked to
     this request. It also mentions that we should have also a pub-secret keys pair in the attributes.
     My guess is that the disclosure proof class should contain: 1- the zkp with the pairings on
