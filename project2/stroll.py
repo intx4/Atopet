@@ -3,7 +3,6 @@ Classes that you need to complete.
 """
 
 from typing import Any, Dict, List, Union, Tuple
-from credential import Attribute
 from credential import SecretKey, PublicKey, generate_key
 from credential import IssueRequest, create_issue_request, sign_issue_request
 # Optional import
@@ -11,7 +10,7 @@ from serialization import jsonpickle
 from server import PUBLIC_KEY, SECRET_KEY
 
 # Type aliases
-State = int #blinding factor
+State = (int, int) #(blinding_factor, private_key)
 
 
 class Server:
@@ -80,8 +79,7 @@ class Server:
         sk = jsonpickle.decode(server_sk.decode())
         pk = jsonpickle.decode(server_pk.decode())
         
-        attrs = [Attribute(a) for a in subscriptions]
-        sigma = sign_issue_request(sk, pk, request, attrs)
+        sigma = sign_issue_request(sk, pk, request, subscriptions)
         
         return jsonpickle.encode(sigma).encode()
     
@@ -119,7 +117,7 @@ class Client:
         ###############################################
         # TODO: Complete this function.
         ###############################################
-        raise NotImplementedError()
+        # self.private_key = G1.order().random().int()
 
 
     def prepare_registration(
