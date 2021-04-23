@@ -84,11 +84,37 @@ class IssueRequest:
         else:
             return True
 
+class PedersenNIZKP:
+    def __init__(self, g, h, R, com, chall, resp, msg):
+        self.g = g
+        self.h = h
+        self.R = R
+        self.commitment = com
+        self.chall = chall
+        self.resp = resp
+        self.message = msg
+
+        def is_valid(self, com, g, h, msg):
+            """ Verify nizkp on Pedersen Commitment: i.e reform R and verify that c corresponds to challenge"""
+            # g and Y elements in EC
+            R = g ** self.resp[0]
+            h_encoded = []
+            for h_i, s in zip(h, self.resp[1:]):
+                R *= h_i ** s
+                h_encoded.append(jsonpickle.encode(h_i))
+            R *= com ** (-self.chall % P.int())
+            c = form_schnorr_chall(jsonpickle.encode(g), h_encoded, jsonpickle.encode(R), jsonpickle.encode(com), msg)
+    
+            if c != self.chall:
+                return False
+            else:
+                return True
+        
 class DisclosureProof:
-    def __init__(self, sigma: Tuple[G1Element, G1Element], disclosed_attrs: List[Attribute], proof: GTElement):
-        self.sigma = sigma
+    def __init__(self, sigma: Tuple[G1Element, G1Element], disclosed_attrs: List[Attribute], proof: PedersenNIZKP):
+        self.sigma = sigma #it's the randomize credential
         self.disclosed_attrs = disclosed_attrs
-        self.proof = proof
+        self.proof = proof #it's the proof on the Pedersen Commitment
 
 """ Aliases """
 
@@ -252,17 +278,27 @@ def create_disclosure_proof(
     t = P.random().int()
     r = P.random().int()
     
+    #randomized credential
     sigma_p = (credential[0]**r, (((credential[0]**t) * credential[1])**r))
     
     g_t = pk.generator_g2
     Y_t = pk.y_g2elem_list
-    zkp = (sigma_p[0].pair(g_t))**t
-    for y_t, a in zip(Y_t, hidden_attributes):
-        zkp *= (sigma_p[0].pair(y_t))**a.to_integer()
     
+    #construct the commitment for the proof: it's a GT Element
+    g_star = sigma_p[0].pair(g_t)
+    com = g_star**t
+    h_star = []
+    for y_t, a in zip(Y_t, hidden_attributes):
+        h_star_i = sigma_p[0].pair(y_t)
+        h_star.append(h_star_i)
+        com *= h_star_i**a.to_integer()
+
+    #collect disclosed attrs
     disclosed = [a for a in attributes if a not in hidden_attributes]
     
-    return DisclosureProof(sigma_p, disclosed, zkp), message
+    resp, chall = pedersen_commitment_nizkp(t, hidden_attributes, g_star, h_star, com, message)
+    
+    return DisclosureProof(sigma_p, disclosed, com), message
 
 def verify_disclosure_proof(
         pk: PublicKey,
@@ -292,19 +328,6 @@ def verify_disclosure_proof(
 
 """########################################## HELPERS ##########################################"""
 
-def form_schnorr_chall(g: str, h: List[str], R: str, C: str):
-    """form chall as sha256(g|Y_i|R|C) where R and C are encoded with jsonpickle"""
-    m = hashlib.sha256()
-    l = []
-    l.append(g)
-    for y in h:
-        l.append(y)
-    l.append(R)
-    l.append(C)
-    sch = '|'.join(l)
-    m.update(sch.encode())
-    return int.from_bytes(m.digest(), byteorder='big')
-
 def gen_rand_point(G, unity=True):
     """ Return a random point in G, G* if unity"""
     while True:
@@ -325,25 +348,46 @@ def convert_msgs(msgs):
     """convert bytes to int """
     return [Attribute(msg.decode()).to_integer() for msg in msgs]
 
-def pedersen_commitment_nizkp(t, attrs, g, Y, C):
+def pedersen_commitment_nizkp(t, attrs, g, h, com, msg):
     """ create a non interactive zkp for pedersen commitment """
+    #extract randomizers
     d = P.random().int()
     d_prime = []
-    for _ in range(0, len(Y)):
+    for _ in range(0, len(h)):
         d_prime.append(P.random().int())
     R = g ** d
-    h = []
-    for y,d_p in zip(Y, d_prime):
-        R *= y ** d_p
-        h.append(jsonpickle.encode(y))
-
-    chall = form_schnorr_chall(jsonpickle.encode(g), h, jsonpickle.encode(R), jsonpickle.encode(C))
+    h_encoded = [] #list of all the h_i encoded as strings
+    for h_i, d_p in zip(h, d_prime):
+        R *= h_i ** d_p
+        #add the encoded string
+        h_encoded.append(jsonpickle.encode(h_i))
+    
+    #form chall with Hash
+    chall = form_schnorr_chall(jsonpickle.encode(g), h, jsonpickle.encode(R), jsonpickle.encode(com), msg)
+    
+    #form responses
     resp = []
     resp.append(t * chall + d % P.int())
     for a, d_p in zip(attrs, d_prime):
         resp.append(a.to_integer()*chall + d_p % P.int())
     return chall, resp
 
+
+def form_schnorr_chall(g: str, h: List[str], R: str, com: str, msg:str):
+    """form chall as sha256(g|Y_i|R|com|msg) where R and C are encoded with jsonpickle"""
+    m = hashlib.sha256()
+    l = []
+    l.append(g)
+    
+    for y in h:
+        l.append(y)
+    l.append(R)
+    l.append(com)
+    l.append(msg)
+    
+    sch = '|'.join(l)
+    m.update(sch.encode())
+    return int.from_bytes(m.digest(), byteorder='big')
 """TO DO:
     1 - I think that in the disclosure proof and stuff, when we receive that message param, that corresponds
     to a location request. In the handout part 1.3 it says that the disclosure should be linked to

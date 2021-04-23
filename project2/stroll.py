@@ -12,7 +12,6 @@ from serialization import jsonpickle
 # Type aliases
 State = int #blinding factor
 
-
 class Server:
     """Server"""
     def __init__(self):
