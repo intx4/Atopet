@@ -142,7 +142,7 @@ class Signature:
     """ A Blind signature or Anonymous credential. It's the sigma of lecture notes anyway """
     def __init__(self, sigma_one, sigma_two):
         self.sigma_one = sigma_one
-        self.simga_two = sigma_two
+        self.sigma_two = sigma_two
         
     def is_valid(self):
         return self.sigma_one != G1.neutral_element() and self.sigma_two != G1.neutral_element()
