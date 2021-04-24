@@ -64,14 +64,14 @@ class PublicKey:
         
         if len(client_subscriptions_set) != 0:
             #ideally all requested subs should be consumed...if one is not, then is invalid
-            raise Exception("Invalid subscription entered in provied subscriptions" )
+            raise Exception("Invalid subscription entered in provided subscriptions" )
         
         return signed_attributes
 
     # plz change this name lmao
-    def get_hidden_public_key_list_init_cred_request(self):
+    def get_client_attribute_y(self):
         """ gets the Y_i in the public key for encoding secret key of client """
-        return [self.y_g1elem_list[-1]]
+        return self.y_g1elem_list[-1]
 
 
 class SecretKey:
@@ -80,15 +80,6 @@ class SecretKey:
         self.y_g2_exp_list = y_g2_exp_list
         self.x_g1elem = x_g1elem
 
-
-class Attribute:
-    """ for nicely converting strings to integer"""
-    def __init__(self, attribute: str):
-        self.attribute = attribute
-
-    def to_integer(self):
-        return int.from_bytes(bytes(self.attribute, 'utf-8'), 'big')
-    
     
 class PedersenNIZKP:
     """ wrapper for a Pedersen NIZKP"""
@@ -123,11 +114,11 @@ class IssueRequest:
 
 class Signature:
     """ A Blind signature or Anonymous credential. It's the sigma of lecture notes anyway """
-    def __init__(self, sigma: Tuple[G1Element, G1Element]):
-        self.sigma = sigma
+    def __init__(self, sigma_tuple: Tuple[G1Element, G1Element]):
+        self.sigma_tuple = sigma_tuple
         
     def is_valid(self):
-        return self.sigma[0] != G1.neutral_element() and self.sigma[1] != G1.neutral_element()
+        return self.sigma_tuple[0] != G1.neutral_element() and self.sigma_tuple[1] != G1.neutral_element()
 
        
 class DisclosureProof:
@@ -138,9 +129,9 @@ class DisclosureProof:
             proof = It's a NIZKP on the Pedersen Commitment, where g and h are the pairings described in lecture notes
     """
     def __init__(self,
-                 sigma: Tuple[G1Element, G1Element],
+                 sigma_tuple: Tuple[G1Element, G1Element],
                  disclosed_attrs: List[str], proof: PedersenNIZKP):
-        self.sigma = sigma
+        self.sigma_tuple = sigma_tuple
         self.disclosed_attrs = disclosed_attrs
         self.proof = proof
 
@@ -179,7 +170,7 @@ def generate_key(
 
 ## ISSUANCE PROTOCOL ##
 
-def create_issue_request(
+def create_credential_request(
         pk: PublicKey,
         client_subscriptions: List[str],
     ) -> (IssueRequest, int):
@@ -189,22 +180,23 @@ def create_issue_request(
 
     *Warning:* You may need to pass state to the `obtain_credential` function -> return t to be kept private
     """
-    g = pk.generator_g1
-    Y = pk.y_g1elem_list
-    t = GROUP_ORDER.random().int() #blinding factor
-    private_key = GROUP_ORDER.random().int()
-    S = G1.neutral_element()*pk.get_hidden_public_key_list_init_cred_request()[0]**private_key
+    g1_generator = pk.generator_g1
+    y_g1elem_list = pk.y_g1elem_list
+    blinding_factor = GROUP_ORDER.random().int() #blinding factor
+    client_private_key = GROUP_ORDER.random().int()
+    encoded_client_private_key = G1.neutral_element() * pk.get_client_attribute_y() ** client_private_key
 
-    com = (g ** t) * S
+    client_commitment = (g1_generator ** blinding_factor) * encoded_client_private_key
     
-    chall, resp = pedersen_commitment_nizkp(t, private_key, g, Y, com, "")
-    proof = PedersenNIZKP(g, Y, com, chall, resp)
+    chall, resp = pedersen_commitment_nizkp(blinding_factor, client_private_key, g1_generator, y_g1elem_list,
+                                            client_commitment, "")
+    proof = PedersenNIZKP(g1_generator, y_g1elem_list, client_commitment, chall, resp)
     
     attribute_map = map_attributes(pk.subscriptions, client_subscriptions)
     
-    return IssueRequest(proof), (t, private_key, attribute_map)
+    return IssueRequest(proof), (blinding_factor, client_private_key, attribute_map)
 
-def sign_issue_request(
+def sign_credential_request(
         sk: SecretKey,
         pk: PublicKey,
         request: IssueRequest,
@@ -233,21 +225,21 @@ def sign_issue_request(
     
     return Signature((sigma_1, sigma_2))
     
-def obtain_credential(
-        t: int,
+def unblind_created_credential(
+        blinding_factor: int,
         response: Signature
     ) -> Signature:
     """ Derive a credential from the issuer's response
 
     This corresponds to the "Unblinding signature" step.
     """
-    sigma_1 = response.sigma[0]
-    sigma_2 = response.sigma[1]
+    sigma_1 = response.sigma_tuple[0]
+    sigma_2 = response.sigma_tuple[1]
     
     if sigma_1.is_neutral_element() and sigma_2.is_neutral_element():
         return Signature((G1.neutral_element(), G1.neutral_element()))
     
-    sigma_2_p = sigma_2.div((sigma_1 ** t)) #unblind
+    sigma_2_p = sigma_2.div((sigma_1 ** blinding_factor)) #unblind
     return Signature((sigma_1, sigma_2_p))
 
 
@@ -268,7 +260,7 @@ def create_disclosure_proof(
     r = GROUP_ORDER.random().int()
     
     #randomized credential
-    sigma_p = (credential.sigma[0]**r, (((credential.sigma[0]**t) * credential.sigma[1])**r))
+    sigma_p = (credential.sigma_tuple[0] ** r, (((credential.sigma_tuple[0] ** t) * credential.sigma_tuple[1]) ** r))
     
     g_t = pk.generator_g2
     Y_t = pk.y_g2elem_list
@@ -290,7 +282,7 @@ def create_disclosure_proof(
     resp, chall = pedersen_commitment_nizkp(t, hidden_attributes, g_star, h_star, com, message)
     proof = PedersenNIZKP(g_star, h_star, com, chall, resp)
     
-    return DisclosureProof(sigma=sigma_p, disclosed_attrs=disclosed_attributes, proof=proof)
+    return DisclosureProof(sigma_tuple=sigma_p, disclosed_attrs=disclosed_attributes, proof=proof)
 
 def verify_disclosure_proof(
         pk: PublicKey,
@@ -302,7 +294,7 @@ def verify_disclosure_proof(
 
     Hint: The verifier may also want to retrieve the disclosed attributes
     """
-    sigma = disclosure_proof.sigma
+    sigma = disclosure_proof.sigma_tuple
     g_t = pk.generator_g2
     Y_t = pk.y_g2elem_list
     X_t = pk.x_g2element
@@ -368,10 +360,6 @@ def map_attributes(subscriptions, chosen):
             attributes_map[sub] = PublicKey.SUBSCRIBED_NO
     
     return attributes_map
-
-def convert_msgs(msgs):
-    """convert bytes to int """
-    return [Attribute(msg.decode()).to_integer() for msg in msgs]
 
 def pedersen_commitment_nizkp(t, attrs, g, h, com, msg):
     """ create a non interactive zkp for pedersen commitment

@@ -20,7 +20,7 @@ class ABC:
     def __init__(self, client_sk: int, client_attrs: AttributeMap, signature: Signature):
         self.client_sk = client_sk
         self.client_attrs = client_attrs
-        self.sigma = signature.sigma
+        self.sigma = signature.sigma_tuple
         
 class Server:
     """Server"""
@@ -89,7 +89,7 @@ class Server:
         sk = jsonpickle.decode(server_sk.decode(), classes=SecretKey)
         pk = jsonpickle.decode(server_pk.decode(), classes=PublicKey)
         
-        sigma = sign_issue_request(sk, pk, request, subscriptions)
+        sigma = sign_credential_request(sk, pk, request, subscriptions)
         
         return jsonpickle.encode(sigma).encode()
     
@@ -149,7 +149,7 @@ class Client:
                 You need to design the state yourself.
         """
         pk = jsonpickle.decode(server_pk.decode())
-        request, state = create_issue_request(pk, subscriptions)
+        request, state = create_credential_request(pk, subscriptions)
         
         return jsonpickle.encode(request).encode(), state
         
@@ -176,7 +176,7 @@ class Client:
         client_attributes = private_state.attribute_map
         client_sk = private_state.private_key
         
-        signature = obtain_credential(t, response)
+        signature = unblind_created_credential(t, response)
         if not signature.is_valid():
             raise Exception("Server could not issue a credential for chosen subscriptions!")
         
@@ -205,6 +205,6 @@ class Client:
         """
         pk = jsonpickle.decode(server_pk.decode(), classes=PublicKey)
         anon_creds = jsonpickle.decode(credentials.decode(), classes=ABC)
-        request = create_disclosure_proof(pk, anon_creds.sigma, anon_creds.client_sk, anon_creds.client_attrs, types, message)
+        request = create_disclosure_proof(pk, anon_creds.sigma_tuple, anon_creds.client_sk, anon_creds.client_attrs, types, message)
         
         return jsonpickle.encode(request).encode()
