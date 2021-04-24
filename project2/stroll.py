@@ -5,7 +5,7 @@ Classes that you need to complete.
 from credential import *
 # Optional import
 from serialization import jsonpickle
-from server import PUBLIC_KEY, SECRET_KEY
+#from server import PUBLIC_KEY, SECRET_KEY
 
 # Type aliases
 class State:
@@ -24,8 +24,8 @@ class ABC:
         
 class Server:
     """Server"""
-    PUBLIC_KEY = PublicKey
-    SECRET_KEY = SecretKey
+    #PUBLIC_KEY = PublicKey
+    #SECRET_KEY = SecretKey
     def __init__(self):
         """
         Server constructor.
@@ -33,10 +33,10 @@ class Server:
         ###############################################
         # TODO: Complete this function.
         ###############################################
-        if PUBLIC_KEY is None or SECRET_KEY is None:
-            raise ValueError("Public or Secret ye not set")
-        Server.PUBLIC_KEY = PUBLIC_KEY
-        Server.SECRET_KEY = SECRET_KEY
+        #if PUBLIC_KEY is None or SECRET_KEY is None:
+            #raise ValueError("Public or Secret ye not set")
+        #Server.PUBLIC_KEY = PUBLIC_KEY
+        #Server.SECRET_KEY = SECRET_KEY
 
     @staticmethod
     def generate_ca(
@@ -177,6 +177,8 @@ class Client:
         client_sk = private_state.private_key
         
         signature = obtain_credential(t, response)
+        if not signature.is_valid():
+            raise Exception("Server could not issue a credential for chosen subscriptions!")
         
         credentials = ABC(client_sk=client_sk, client_attrs=client_attributes, signature=signature)
         
