@@ -97,12 +97,10 @@ class PedersenNIZKP:
                 big_R = generator**proof
             else:
                 big_R *= generator**proof
-        big_R = self.commitment**(-self.chall)
+        big_R *= self.commitment**(-self.chall)
         full_public_components_list = [big_R] + list_of_generators + self.list_of_public_components
         computed_challenge = PedersenNIZKP.hash_public_components(full_public_components_list)
         return computed_challenge == self.chall
-
-
 
     @staticmethod
     def generate_PedersenNIZKP_proof_of_kowledge(list_of_secrets, list_of_generators,
@@ -111,8 +109,8 @@ class PedersenNIZKP:
         for _ in range(0, len(list_of_secrets)):
             random_r_list.append(GROUP_ORDER.random().int())
         big_R = None
-        for secret, random_r, generator in zip(list_of_secrets, random_r_list, list_of_generators):
-            public_encoded_value = (generator**secret)**random_r
+        for random_r, generator in zip(random_r_list, list_of_generators):
+            public_encoded_value = generator**random_r
             if big_R is None:
                 big_R = public_encoded_value
             else:
@@ -417,7 +415,3 @@ def exponentiate_attributes(subscriptions: OrderedSet[str], chosen: List[str], a
             S *= GT.neutral_element()
     
     return S
-"""
-TO DO: I am passing a list to exponentiate attributes (either disclosed or hidden)
-What I should do is loop along the subs
-"""
