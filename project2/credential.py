@@ -123,7 +123,7 @@ class PedersenNIZKP:
         for secret, random_r in zip(list_of_secrets, random_r_list):
             proof = (random_r + challenge*secret) % GROUP_ORDER.int()
             response.append(proof)
-        return PedersenNIZKP(commitment, challenge, response)
+        return PedersenNIZKP(commitment, challenge, response, list_public_components)
 
     @staticmethod
     def hash_public_components(list_public_components):
