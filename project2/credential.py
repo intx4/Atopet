@@ -83,7 +83,7 @@ class SecretKey:
     
 class PedersenNIZKP:
     """ wrapper for a Pedersen NIZKP"""
-    def __init__(self, list_of_public_components, com, chall, resp):
+    def __init__(self, com, chall, resp, list_of_public_components=[]):
         self.list_of_public_components = list_of_public_components
         self.commitment = com
         self.chall = chall
