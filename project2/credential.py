@@ -92,18 +92,18 @@ class PedersenNIZKP:
     def is_valid(self, list_of_generators):
         # Verify nizkp on Pedersen Commitment: i.e reform R and verify that c corresponds to challenge
         big_R = None
-        for proof, generator in zip(self.resp, list_of_generators):
+        for s, generator in zip(self.resp, list_of_generators):
             if big_R is None:
-                big_R = generator**proof
+                big_R = generator ** s
             else:
-                big_R *= generator**proof
+                big_R *= generator ** s
         big_R *= self.commitment**(-self.chall)
         full_public_components_list = [big_R] + list_of_generators + self.list_of_public_components
         computed_challenge = PedersenNIZKP.hash_public_components(full_public_components_list)
         return computed_challenge == self.chall
 
     @staticmethod
-    def generate_PedersenNIZKP_proof_of_kowledge(list_of_secrets, list_of_generators,
+    def generate_proof_of_kowledge(list_of_secrets, list_of_generators,
                                                  commitment, list_public_components=[]):
         random_r_list = []
         for _ in range(0, len(list_of_secrets)):
@@ -119,8 +119,8 @@ class PedersenNIZKP:
         challenge = PedersenNIZKP.hash_public_components(full_public_component_list)
         response = []
         for secret, random_r in zip(list_of_secrets, random_r_list):
-            proof = (random_r + challenge*secret) % GROUP_ORDER.int()
-            response.append(proof)
+            s = (random_r + challenge*secret) % GROUP_ORDER.int()
+            response.append(s)
         return PedersenNIZKP(commitment, challenge, response, list_public_components)
 
     @staticmethod
@@ -215,7 +215,7 @@ def create_credential_request(
     client_commitment = (g1_generator ** blinding_factor) * encoded_client_private_key
     list_of_secret_components = [blinding_factor, client_private_key]
     list_of_generators = [g1_generator, pk.get_client_attribute_public_y()]
-    proof_of_knowlege = PedersenNIZKP.generate_PedersenNIZKP_proof_of_kowledge(list_of_secret_components,
+    proof_of_knowlege = PedersenNIZKP.generate_proof_of_kowledge(list_of_secret_components,
                                                                                list_of_generators, client_commitment)
 
     attribute_map = map_attributes(pk.subscriptions, client_subscriptions)
