@@ -350,8 +350,11 @@ def gen_rand_point(G, unity=True):
     return H
 
 def map_attributes(subscriptions, chosen):
+    """ Forms an Attribute Map based on chosen subscriptions:
+    Chosen ones -> Yes, Not chosen -> No
+    Output: AttributeMap = {str: int} """
     client_subs = set(chosen)
-    attributes_map = {}
+    attributes_map = AttributeMap
     
     for sub in subscriptions:
         if sub in client_subs:
@@ -366,7 +369,8 @@ def convert_msgs(msgs):
     return [Attribute(msg.decode()).to_integer() for msg in msgs]
 
 def pedersen_commitment_nizkp(t, attrs, g, h, com, msg):
-    """ create a non interactive zkp for pedersen commitment """
+    """ create a non interactive zkp for pedersen commitment
+        Output: a chall (int) and a response List[int] """
     #extract randomizers
     d = GROUP_ORDER.random().int()
     d_prime = []
@@ -392,7 +396,8 @@ def pedersen_commitment_nizkp(t, attrs, g, h, com, msg):
 
 
 def form_schnorr_chall(g: str, h: List[str], R: str, com: str, msg:str):
-    """form chall as sha256(g|h_i|R|com|msg) where R and C are encoded with jsonpickle"""
+    """ form chall as sha256(g|h_i|R|com|msg) where R and C are encoded with jsonpickle
+        Output: an int """
     m = hashlib.sha256()
     l = [g]
 
@@ -408,7 +413,18 @@ def form_schnorr_chall(g: str, h: List[str], R: str, com: str, msg:str):
 
 
 def exponentiate_attributes(subscriptions: OrderedSet[str], chosen: List[str], attributes: AttributeMap, h: List[GTElement], side='server'):
-    
+    """ Handles the operation of exponentiating a base of GT elements to the provided attributes
+    Input:
+        subscriptions: it's the ordered set of all subscriptions provided in the public key
+        chosen: it's the list of attributes to be exponentiated
+        attributes: it's the mapping. Particulary useful when this func is called by the client
+                    since it will exponentiate both attributes mapping to yes and no
+        h : is the base
+        side: flag to indicate whether or not it's the server side. Useful because the exponentiation slightly changes
+    Output:
+        A GT element """
+        
+
     chosen_attrs = set(chosen)
     if side == 'client':
         exp = 1
