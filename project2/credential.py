@@ -97,7 +97,7 @@ class PedersenNIZKP:
                 big_R = generator**proof
             else:
                 big_R *= generator**proof
-        big_R = big_R**(-self.chall)
+        big_R = self.commitment**(-self.chall)
         full_public_components_list = [big_R] + list_of_generators + self.list_of_public_components
         computed_challenge = PedersenNIZKP.hash_public_components(full_public_components_list)
         return computed_challenge == self.chall
