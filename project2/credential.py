@@ -84,8 +84,8 @@ class SecretKey:
     
 class PedersenNIZKP:
     """ wrapper for a Pedersen NIZKP"""
-    def __init__(self, com, chall, resp, list_of_public_components=[]):
-        self.list_of_public_components = list_of_public_components
+    def __init__(self, com, chall, resp, message=''):
+        self.message = message
         self.commitment = com
         self.chall = chall
         self.resp = resp
@@ -105,8 +105,9 @@ class PedersenNIZKP:
 
     @staticmethod
     def generate_proof_of_kowledge(list_of_secrets, list_of_generators,
-                                                 commitment, list_public_components=[]):
+                                                 commitment, message=b''):
         random_r_list = []
+        message = message.decode()
         for _ in range(0, len(list_of_secrets)):
             random_r_list.append(GROUP_ORDER.random().int())
         big_R = None
@@ -116,13 +117,13 @@ class PedersenNIZKP:
                 big_R = public_encoded_value
             else:
                 big_R *= public_encoded_value
-        full_public_component_list = [big_R] + list_of_generators + list_public_components
+        full_public_component_list = [big_R] + list_of_generators + [message]
         challenge = PedersenNIZKP.hash_public_components(full_public_component_list)
         response = []
         for secret, random_r in zip(list_of_secrets, random_r_list):
             s = (random_r + challenge*secret) % GROUP_ORDER.int()
             response.append(s)
-        return PedersenNIZKP(commitment, challenge, response, list_public_components)
+        return PedersenNIZKP(commitment, challenge, response, message)
 
     @staticmethod
     def hash_public_components(list_public_components):
@@ -305,8 +306,10 @@ def create_disclosure_proof(
     com *= S * h_star[-1]**client_sk
     
     public_generators.append(h_star[-1])
+    public_generators.insert(0, sigma_pair_g2generator)
+    list_of_secrets = [random_t] + [attributes[hidden_attribute] for hidden_attribute in hidden_attributes] + [client_sk]
     
-    resp, chall = PedersenNIZKP.generate_proof_of_kowledge(random_t, hidden_attributes, sigma_pair_g2generator, h_star, com, message)
+    proof = PedersenNIZKP.generate_proof_of_kowledge(list_of_secrets, public_generators, com, message)
 
     return DisclosureProof(sigma_tuple=sigma_p, disclosed_attrs=disclosed_attributes, proof=proof)
 
