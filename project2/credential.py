@@ -339,7 +339,7 @@ def verify_disclosure_proof(
         h_star.append(h_star_i)
     
     #form the attribute mapping
-    attribute_map = {}
+    attribute_map = OrderedDict()
     for a in disclosed_attributes:
         attribute_map[a] = PublicKey.SUBSCRIBED_YES
     
