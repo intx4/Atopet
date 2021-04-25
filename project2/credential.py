@@ -84,22 +84,22 @@ class SecretKey:
     
 class PedersenNIZKP:
     """ wrapper for a Pedersen NIZKP"""
-    def __init__(self, com, chall, resp, message=''):
-        self.message = message
+    def __init__(self, com, chall, resp):
         self.commitment = com
         self.chall = chall
         self.resp = resp
         
-    def is_valid(self, list_of_generators):
+    def is_valid(self, list_of_generators, message=b''):
         # Verify nizkp on Pedersen Commitment: i.e reform R and verify that c corresponds to challenge
         big_R = None
+        message = message.decode()
         for s, generator in zip(self.resp, list_of_generators):
             if big_R is None:
                 big_R = generator ** s
             else:
                 big_R *= generator ** s
         big_R *= self.commitment**(-self.chall)
-        full_public_components_list = [big_R] + list_of_generators + self.list_of_public_components
+        full_public_components_list = [big_R] + list_of_generators + [message]
         computed_challenge = PedersenNIZKP.hash_public_components(full_public_components_list)
         return computed_challenge == self.chall
 
@@ -123,7 +123,7 @@ class PedersenNIZKP:
         for secret, random_r in zip(list_of_secrets, random_r_list):
             s = (random_r + challenge*secret) % GROUP_ORDER.int()
             response.append(s)
-        return PedersenNIZKP(commitment, challenge, response, message)
+        return PedersenNIZKP(commitment, challenge, response)
 
     @staticmethod
     def hash_public_components(list_public_components):
