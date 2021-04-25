@@ -300,7 +300,7 @@ def create_disclosure_proof(
         h_star_i = sigma_p[0].pair(y_t)
         h_star.append(h_star_i)
 
-    com *= exponentiate_attributes(pk.subscriptions, hidden_attributes, attributes, h_star, side='client')
+    com *= exponentiate_attributes(pk.subscriptions, hidden_attributes, attributes, h_star, is_server='client')
     com *= h_star[-1]**client_sk
 
     # resp, chall = pedersen_commitment_nizkp(random_t, hidden_attributes, sigma_pair_g2generator, h_star, com, message)
@@ -386,7 +386,8 @@ def map_attributes(subscriptions, chosen):
     return attributes_map
 
 
-def exponentiate_attributes(subscriptions: OrderedSet[str], chosen: List[str], attributes: AttributeMap, h: List[GTElement], side='server'):
+def exponentiate_attributes(subscriptions: OrderedSet[str], chosen_attributes: List[str],
+                            subscriptions_map: AttributeMap, generators_list: List[GTElement], is_server=True):
     """ Handles the operation of exponentiating a base of GT elements to the provided attributes
     Input:
         subscriptions: it's the ordered set of all subscriptions provided in the public key
@@ -399,18 +400,19 @@ def exponentiate_attributes(subscriptions: OrderedSet[str], chosen: List[str], a
         A GT element """
         
 
-    chosen_attrs = set(chosen)
-    if side == 'client':
-        exp = 1
-    else:
+    chosen_attrs = set(chosen_attributes)
+    if is_server:
         exp = -1
+    else:
+        exp = 1
     
     S = GT.neutral_element()
-    
-    for sub, h_i in zip(subscriptions, h):
+    list_generators_used = []
+    for sub, generator in zip(subscriptions, generators_list):
         if sub in chosen_attrs:
-            S *= h_i ** ((attributes[sub] * exp) % GROUP_ORDER.int())
+            S *= generator ** ((subscriptions_map[sub] * exp) % GROUP_ORDER.int())
+            list_generators_used.append(generator)
         else:
             S *= GT.neutral_element()
     
-    return S
+    return S, list_generators_used
