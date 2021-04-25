@@ -56,7 +56,7 @@ class PublicKey:
 
         signed_attributes = []
         
-        for server_valid_subscription, y in zip(self.subscriptions, self.y_g1elem_list):
+        for server_valid_subscription, y in zip(self.subscriptions, self.y_g1elem_list[:-1]):
             if server_valid_subscription in client_subscriptions_set:
                 signed_attributes *= y ** PublicKey.SUBSCRIBED_YES
                 client_subscriptions_set.remove(server_valid_subscription)
@@ -69,7 +69,6 @@ class PublicKey:
         
         return signed_attributes
 
-    # plz change this name lmao
     def get_client_attribute_public_y(self):
         """ gets the Y_i in the public key for encoding secret key of client """
         return self.y_g1elem_list[-1]
@@ -98,18 +97,20 @@ class PedersenNIZKP:
                 big_R = generator ** s
             else:
                 big_R *= generator ** s
-        big_R *= self.commitment**(-self.chall)
+        big_R *= self.commitment ** (-self.chall)
         full_public_components_list = [big_R] + list_of_generators + [message]
         computed_challenge = PedersenNIZKP.hash_public_components(full_public_components_list)
         return computed_challenge == self.chall
 
     @staticmethod
-    def generate_proof_of_kowledge(list_of_secrets, list_of_generators,
-                                                 commitment, message=b''):
+    def generate_proof_of_knowledge(list_of_secrets, list_of_generators,
+                                    commitment, message=b''):
         random_r_list = []
         message = message.decode()
+        
         for _ in range(0, len(list_of_secrets)):
             random_r_list.append(GROUP_ORDER.random().int())
+        
         big_R = None
         for random_r, generator in zip(random_r_list, list_of_generators):
             public_encoded_value = generator**random_r
@@ -117,11 +118,13 @@ class PedersenNIZKP:
                 big_R = public_encoded_value
             else:
                 big_R *= public_encoded_value
+        
         full_public_component_list = [big_R] + list_of_generators + [message]
         challenge = PedersenNIZKP.hash_public_components(full_public_component_list)
         response = []
+        
         for secret, random_r in zip(list_of_secrets, random_r_list):
-            s = (random_r + challenge*secret) % GROUP_ORDER.int()
+            s = (random_r + challenge * secret) % GROUP_ORDER.int()
             response.append(s)
         return PedersenNIZKP(commitment, challenge, response)
 
@@ -190,6 +193,7 @@ def generate_key(
         y_g2_exp_list.append(y_i)
         y_g2_elem_list.append(g2_generator ** y_i)
         y_g1_elem_list.append(g1_generator ** y_i)
+    
     return SecretKey(x_exp, y_g2_exp_list, x_g1element), PublicKey(g1_generator, g2_generator, x_g2element,
                                                                    y_g2_elem_list, y_g1_elem_list, subscriptions)
 
@@ -210,18 +214,23 @@ def create_credential_request(
     *Warning:* You may need to pass state to the `obtain_credential` function -> return t to be kept private
     """
     g1_generator = pk.generator_g1
+    
     blinding_factor = GROUP_ORDER.random().int()
     client_private_key = GROUP_ORDER.random().int()
+    
     encoded_client_private_key = pk.get_client_attribute_public_y() ** client_private_key
 
     client_commitment = (g1_generator ** blinding_factor) * encoded_client_private_key
+    
     list_of_secret_components = [blinding_factor, client_private_key]
     list_of_generators = [g1_generator, pk.get_client_attribute_public_y()]
-    proof_of_knowlege = PedersenNIZKP.generate_proof_of_kowledge(list_of_secret_components,
-                                                                               list_of_generators, client_commitment)
+    
+    proof_of_knowledge = PedersenNIZKP.generate_proof_of_knowledge(list_of_secret_components,
+                                                                   list_of_generators, client_commitment)
 
     attribute_map = map_attributes(pk.subscriptions, client_subscriptions)
-    return IssueRequest(proof_of_knowlege), (blinding_factor, client_private_key, attribute_map)
+    
+    return IssueRequest(proof_of_knowledge), (blinding_factor, client_private_key, attribute_map)
 
 def sign_credential_request(
         sk: SecretKey,
@@ -271,7 +280,6 @@ def unblind_created_credential(
 
 ## SHOWING PROTOCOL ##
 
-# TODO check how it works
 def create_disclosure_proof(
         pk: PublicKey,
         credential: Signature,
@@ -286,13 +294,14 @@ def create_disclosure_proof(
     random_r = GROUP_ORDER.random().int()
     
     #randomized credential
-    sigma_p = (credential.sigma_one ** random_r, (((credential.sigma_one ** random_t) * credential.simga_two) ** random_r))
+    sigma_p = (credential.sigma_one ** random_r,
+               (((credential.sigma_one ** random_t) * credential.sigma_two) ** random_r))
     
     g2_generator = pk.generator_g2
     y_g2elem_list = pk.y_g2elem_list
 
-    sigma_pair_g2generator = sigma_p[0].pair(g2_generator)
-    com = sigma_pair_g2generator ** random_t
+    g_star = sigma_p[0].pair(g2_generator)
+    com = g_star ** random_t
     
     h_star = []
     hidden_attributes = [attr for attr in attributes.keys() if attr not in disclosed_attributes]
@@ -301,15 +310,18 @@ def create_disclosure_proof(
     for y_t in y_g2elem_list:
         h_star_i = sigma_p[0].pair(y_t)
         h_star.append(h_star_i)
-
-    S, public_generators = exponentiate_attributes(pk.subscriptions, hidden_attributes, attributes, h_star, is_server=False)
+    
+    #selects generators corresponding to hidden attributes
+    S, public_generators = exponentiate_attributes(pk.subscriptions, hidden_attributes,
+                                                   attributes, h_star, is_server=False)
     com *= S * h_star[-1]**client_sk
     
+    public_generators = [g_star] + public_generators
     public_generators.append(h_star[-1])
-    public_generators.insert(0, sigma_pair_g2generator)
+    
     list_of_secrets = [random_t] + [attributes[hidden_attribute] for hidden_attribute in hidden_attributes] + [client_sk]
     
-    proof = PedersenNIZKP.generate_proof_of_kowledge(list_of_secrets, public_generators, com, message)
+    proof = PedersenNIZKP.generate_proof_of_knowledge(list_of_secrets, public_generators, com, message)
 
     return DisclosureProof(sigma_tuple=sigma_p, disclosed_attrs=disclosed_attributes, proof=proof)
 
@@ -324,12 +336,10 @@ def verify_disclosure_proof(
     Hint: The verifier may also want to retrieve the disclosed attributes
     """
     sigma = disclosure_proof.sigma_tuple
+    
     g_t = pk.generator_g2
     Y_t = pk.y_g2elem_list
     X_t = pk.x_g2element
-
-    g_t = pk.generator_g2
-    Y_t = pk.y_g2elem_list
 
     #recompute generators for the Pedersen NIZKP
     g_star = sigma[0].pair(g_t)
@@ -345,14 +355,22 @@ def verify_disclosure_proof(
     
     #First check: compute the commitment with the provided public params
     com = sigma[1].pair(g_t)
-    com *= exponentiate_attributes(pk.subscriptions, disclosed_attributes, attribute_map, h_star)
-    com = com / (sigma[0].pair(X_t))
+    S, _ = exponentiate_attributes(pk.subscriptions, disclosed_attributes, attribute_map, h_star)
+    com = com * S / (sigma[0].pair(X_t))
     
     if not com.eq(disclosure_proof.proof.commitment):
         return False
     
+    #extract the h_star used by client
+    public_generators = [g_star]
+    for sub, h_star_i in zip(pk.subscriptions, h_star[:-1]):
+        if sub not in disclosed_attributes:
+            public_generators.append(h_star_i)
+    
+    public_generators.append(h_star[-1])
+    
     #Second check: verify the proof
-    return disclosure_proof.proof.is_valid(g_star, h_star, message)
+    return disclosure_proof.proof.is_valid(public_generators, message)
 
 
 """########################################## HELPERS ##########################################"""
@@ -412,7 +430,7 @@ def exponentiate_attributes(subscriptions: OrderedSet[str], chosen_attributes: L
     S = GT.neutral_element()
     list_generators_used = []
     
-    for sub, generator in zip(subscriptions, generators_list):
+    for sub, generator in zip(subscriptions, generators_list[:-1]):
         if sub in chosen_attrs:
             S *= generator ** ((subscriptions_map[sub] * exp) % GROUP_ORDER.int())
             list_generators_used.append(generator)
