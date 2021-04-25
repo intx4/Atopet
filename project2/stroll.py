@@ -8,19 +8,21 @@ from serialization import jsonpickle
 #from server import PUBLIC_KEY, SECRET_KEY
 
 # Type aliases
-class State:
+class State_of_registration:
     """ Private state after issue request """
-    def __init__(self, t, private_key, attribute_map):
+    def __init__(self, t, private_key, attribute_map, username):
         self.blinding_factor = t
         self.private_key = private_key
         self.attribute_map = attribute_map
+        self.username = username
 
 class ABC:
     """ Attribute based credential to be dumped to file """
-    def __init__(self, client_sk: int, client_attrs: AttributeMap, signature: Signature):
+    def __init__(self, client_sk: int, client_attrs: SubscriptionMap, signature: Signature, username):
         self.client_sk = client_sk
         self.client_attrs = client_attrs
         self.sigma = signature.sigma_tuple
+        self.username = username
         
 class Server:
     """Server"""
@@ -84,12 +86,11 @@ class Server:
             serialized response (the client should be able to build a
                 credential with this response).
         """
-        subscriptions.append(username) #accordingly to server.py setup phase
         request = jsonpickle.decode(issuance_request.decode(), classes=IssueRequest)
         sk = jsonpickle.decode(server_sk.decode(), classes=SecretKey)
         pk = jsonpickle.decode(server_pk.decode(), classes=PublicKey)
         
-        sigma = sign_credential_request(sk, pk, request, subscriptions)
+        sigma = sign_credential_request(sk, pk, request, subscriptions, username)
         
         return jsonpickle.encode(sigma).encode()
     
@@ -131,9 +132,9 @@ class Client:
     def prepare_registration(
             self,
             server_pk: bytes,
-            username: str, #useless here
+            username: str,
             subscriptions: List[str],
-        ) -> Tuple[bytes, State]:
+        ) -> Tuple[bytes, State_of_registration]:
         """Prepare a request to register a new account on the server.
 
         Args:
@@ -149,15 +150,14 @@ class Client:
                 You need to design the state yourself.
         """
         pk = jsonpickle.decode(server_pk.decode())
-        request, state = create_credential_request(pk, subscriptions)
-        
+        request, state = create_credential_request(pk, subscriptions, username)
         return jsonpickle.encode(request).encode(), state
         
     def process_registration_response(
             self,
             server_pk: bytes, #useless
             server_response: bytes,
-            private_state: State
+            private_state: State_of_registration
         ) -> bytes:
         """Process the response from the server.
 
@@ -205,6 +205,7 @@ class Client:
         """
         pk = jsonpickle.decode(server_pk.decode(), classes=PublicKey)
         anon_creds = jsonpickle.decode(credentials.decode(), classes=ABC)
-        request = create_disclosure_proof(pk, anon_creds.sigma_tuple, anon_creds.client_sk, anon_creds.client_attrs, types, message)
+        request = create_disclosure_proof(pk, anon_creds.sigma_tuple, anon_creds.client_sk, anon_creds.username,
+                                          anon_creds.client_attrs, message)
         
         return jsonpickle.encode(request).encode()
