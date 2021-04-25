@@ -352,10 +352,8 @@ def verify_disclosure_proof(
         return False
     
     #Second check: verify the proof
-    if not disclosure_proof.proof.is_valid(g_star, h_star, message):
-        return False
-    
-    return True
+    return disclosure_proof.proof.is_valid(g_star, h_star, message)
+
 
 """########################################## HELPERS ##########################################"""
 
