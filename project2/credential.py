@@ -258,8 +258,8 @@ def unblind_created_credential(
 
     This corresponds to the "Unblinding signature" step.
     """
-    sigma_1 = response.sigma_tuple[0]
-    sigma_2 = response.sigma_tuple[1]
+    sigma_1 = response.sigma_one
+    sigma_2 = response.sigma_two
     
     if sigma_1.is_neutral_element() and sigma_2.is_neutral_element():
         return Signature(G1.neutral_element(), G1.neutral_element())
@@ -291,20 +291,22 @@ def create_disclosure_proof(
     y_g2elem_list = pk.y_g2elem_list
 
     sigma_pair_g2generator = sigma_p[0].pair(g2_generator)
-    com = sigma_pair_g2generator**random_t
+    com = sigma_pair_g2generator ** random_t
+    
     h_star = []
-
     hidden_attributes = [attr for attr in attributes.keys() if attr not in disclosed_attributes]
 
-    for y_t, a in zip(y_g2elem_list, hidden_attributes):
+    #form the generators in GT
+    for y_t in y_g2elem_list:
         h_star_i = sigma_p[0].pair(y_t)
         h_star.append(h_star_i)
 
-    com *= exponentiate_attributes(pk.subscriptions, hidden_attributes, attributes, h_star, is_server='client')
-    com *= h_star[-1]**client_sk
-
-    # resp, chall = pedersen_commitment_nizkp(random_t, hidden_attributes, sigma_pair_g2generator, h_star, com, message)
-    proof = PedersenNIZKP(sigma_pair_g2generator, h_star, com, chall, resp)
+    S, public_generators = exponentiate_attributes(pk.subscriptions, hidden_attributes, attributes, h_star, is_server=False)
+    com *= S * h_star[-1]**client_sk
+    
+    public_generators.append(h_star[-1])
+    
+    resp, chall = PedersenNIZKP.generate_proof_of_kowledge(random_t, hidden_attributes, sigma_pair_g2generator, h_star, com, message)
 
     return DisclosureProof(sigma_tuple=sigma_p, disclosed_attrs=disclosed_attributes, proof=proof)
 
@@ -399,8 +401,8 @@ def exponentiate_attributes(subscriptions: OrderedSet[str], chosen_attributes: L
     Output:
         A GT element """
         
-
     chosen_attrs = set(chosen_attributes)
+    
     if is_server:
         exp = -1
     else:
@@ -408,6 +410,7 @@ def exponentiate_attributes(subscriptions: OrderedSet[str], chosen_attributes: L
     
     S = GT.neutral_element()
     list_generators_used = []
+    
     for sub, generator in zip(subscriptions, generators_list):
         if sub in chosen_attrs:
             S *= generator ** ((subscriptions_map[sub] * exp) % GROUP_ORDER.int())
