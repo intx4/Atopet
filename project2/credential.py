@@ -412,10 +412,10 @@ def exponentiate_attributes(subscriptions: OrderedSet[str], chosen_attributes: L
     """ Handles the operation of exponentiating a base of GT elements to the provided attributes
     Input:
         subscriptions: it's the ordered set of all subscriptions provided in the public key
-        chosen: it's the list of attributes to be exponentiated
-        attributes: it's the mapping. Particulary useful when this func is called by the client
+        chosen_attributes: it's the list of attributes to be exponentiated
+        subscriptions_map: it's the mapping. Particulary useful when this func is called by the client
                     since it will exponentiate both attributes mapping to yes and no
-        h : is the base
+        generators_list : is the base
         side: flag to indicate whether or not it's the server side. Useful because the exponentiation slightly changes
     Output:
         A GT element """
