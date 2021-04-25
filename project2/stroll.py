@@ -128,7 +128,6 @@ class Client:
         # TODO: Complete this function.
         ###############################################
 
-
     def prepare_registration(
             self,
             server_pk: bytes,
@@ -157,7 +156,7 @@ class Client:
             self,
             server_pk: bytes, #useless
             server_response: bytes,
-            private_state: State_of_registration
+            private_state: dict
         ) -> bytes:
         """Process the response from the server.
 
@@ -172,15 +171,14 @@ class Client:
         """
         
         response = jsonpickle.decode(server_response.decode(), classes=Signature)
-        t = private_state.blinding_factor
-        client_attributes = private_state.attribute_map
-        client_sk = private_state.private_key
-        
-        signature = unblind_created_credential(t, response)
+
+        signature = unblind_created_credential(private_state['blinding_factor'], response)
         if not signature.is_valid():
             raise Exception("Server could not issue a credential for chosen subscriptions!")
         
-        credentials = ABC(client_sk=client_sk, client_attrs=client_attributes, signature=signature)
+        credentials = ABC(client_sk=private_state['client_private_key'],
+                          client_attrs=private_state['attribute_map'],
+                          signature=signature, username=private_state['username'])
         
         return jsonpickle.encode(credentials).encode()
 

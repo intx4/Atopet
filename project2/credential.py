@@ -19,7 +19,7 @@ from typing import List, Tuple
 from petrelic.multiplicative.pairing import G1, G2, GT, G1Element, G2Element, GTElement
 from ordered_set import OrderedSet
 import hashlib
-from stroll import State_of_registration
+
 from collections import OrderedDict
 
 """Public parameters"""
@@ -44,12 +44,14 @@ class PublicKey:
         self.generator_g2 = generator_g2
         self.x_g2element = x_g2element
         self.y_g2elem_list = y_g2elem_list[:-2]
-        self.y_for_private_key = y_g2elem_list[-1]
-        self.y_for_username = y_g2elem_list[-2]
-        self.y_g1elem_list = y_g1elem_list
+        self.g2_y_for_private_key = y_g2elem_list[-1]
+        self.g2_y_for_username = y_g2elem_list[-2]
+        self.y_g1elem_list = y_g1elem_list[:-2]
+        self.g1_y_for_private_key = y_g1elem_list[-1]
+        self.g1_y_for_username = y_g1elem_list[-2]
         self.subscriptions = OrderedSet(subscriptions)
         
-        if len(subscriptions) + 1 != len(y_g2elem_list): #+1 because the attributes are client_sk + subs
+        if len(subscriptions) + 2 != len(y_g2elem_list): #+1 because the attributes are client_sk + username + subs
             raise Exception('The number of attributes for subscription is not 1 less than the number of public keys')
 
     def generate_signed_subscriptions_attributes(self, subscriptions):
@@ -195,7 +197,7 @@ def generate_key(
 
     return SecretKey(x_exp, y_g2_exp_list, x_g1element), PublicKey(g1_generator, g2_generator, x_g2element,
                                                                    y_g2_elem_list, y_g1_elem_list,
-                                                                   subscriptions_plus_username[-1])
+                                                                   subscriptions_plus_username[:-1])
 
 #################################
 ## ATTRIBUTE-BASED CREDENTIALS ##
@@ -208,7 +210,7 @@ def create_credential_request(
         pk: PublicKey,
         client_subscriptions: List[str],
         username: str
-    ) -> (IssueRequest, State_of_registration):
+    ) -> (IssueRequest, dict):
     """ Create an issuance request
 
     This corresponds to the "user commitment" step in the issuance protocol.
@@ -219,17 +221,18 @@ def create_credential_request(
 
     blinding_factor = GROUP_ORDER.random().int()
     client_private_key = GROUP_ORDER.random().int()
-    encoded_client_private_key = pk.y_for_private_key ** client_private_key
+    encoded_client_private_key = pk.g1_y_for_private_key ** client_private_key
     client_commitment = (g1_generator ** blinding_factor) * encoded_client_private_key
 
     list_of_secret_components = [blinding_factor, client_private_key]
-    list_of_generators = [g1_generator, pk.y_for_private_key]
+    list_of_generators = [g1_generator, pk.g1_y_for_private_key]
     proof_of_knowledge = PedersenNIZKP.generate_proof_of_knowledge(list_of_secret_components,
                                                                    list_of_generators, client_commitment)
 
     attribute_map = map_attributes_to_YES_NO(pk.subscriptions, client_subscriptions)
-    return IssueRequest(proof_of_knowledge), State_of_registration(blinding_factor, client_private_key,
-                                                                   attribute_map, username)
+    return IssueRequest(proof_of_knowledge), {'blinding_factor': blinding_factor,
+                                              'client_private_key': client_private_key,
+                                              'attribute_map': attribute_map, 'username': username}
 
 def sign_credential_request(
         sk: SecretKey,
@@ -243,7 +246,7 @@ def sign_credential_request(
     This corresponds to the "Issuer signing" step in the issuance protocol.
     """
     g = pk.generator_g1
-    list_of_generators = [g, pk.y_for_private_key]
+    list_of_generators = [g, pk.g2_y_for_private_key]
     # verify proof
     if not request.proof.is_valid(list_of_generators):
         return Signature(G1.neutral_element(), G1.neutral_element())
@@ -256,7 +259,7 @@ def sign_credential_request(
     sigma_1 = g ** u
     sigma_2 = X * C
     sigma_2 *= pk.generate_signed_subscriptions_attributes(client_subscriptions)
-    sigma_2 *= pk.y_for_username**int.from_bytes(username.encode())
+    sigma_2 *= pk.g1_y_for_username ** int.from_bytes(username.encode())
     sigma_2 = sigma_2 ** u
     
     return Signature(sigma_1, sigma_2)
@@ -311,8 +314,8 @@ def create_disclosure_proof(
     for y_t in y_g2elem_list:
         h_star_i = sigma_p[0].pair(y_t)
         h_star.append(h_star_i)
-    h_star_private_key = sigma_p[0].pair(pk.y_for_private_key)
-    h_star_username = sigma_p[0].pair(pk.y_for_username)
+    h_star_private_key = sigma_p[0].pair(pk.g2_y_for_private_key)
+    h_star_username = sigma_p[0].pair(pk.g2_y_for_username)
     #selects generators corresponding to hidden attributes
     S, public_generators = exponentiate_attributes(pk.subscriptions, hidden_attributes,
                                                    attributes, h_star, is_server=False)
@@ -373,8 +376,8 @@ def verify_disclosure_proof(
         if sub not in disclosed_attributes:
             public_generators.append(h_star_i)
 
-    h_star_private_key = sigma[0].pair(pk.y_for_private_key)
-    h_star_username = sigma[0].pair(pk.y_for_username)
+    h_star_private_key = sigma[0].pair(pk.g2_y_for_private_key)
+    h_star_username = sigma[0].pair(pk.g2_y_for_username)
     public_generators.append(h_star_private_key)
     public_generators.append(h_star_username)
     #Second check: verify the proof
