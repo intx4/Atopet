@@ -20,12 +20,13 @@ from petrelic.multiplicative.pairing import G1, G2, GT, G1Element, G2Element, GT
 from serialization import jsonpickle
 from ordered_set import OrderedSet
 import hashlib
+from collections import OrderedDict
 
 """Public parameters"""
 GROUP_ORDER = G1.order()
 
 """ Aliases """
-AttributeMap = {str: int} #Maps an attribute to encoded(yes/no)
+AttributeMap = OrderedDict({str: int}) #Maps an attribute to encoded(yes/no)
 
 ######################
 
@@ -289,25 +290,23 @@ def create_disclosure_proof(
     g2_generator = pk.generator_g2
     y_g2elem_list = pk.y_g2elem_list
 
-    # May have issues here
-    # #construct the commitment for the proof: it's a GT Element
-    # sigma_pair_g2generator = sigma_p[0].pair(g2_generator)
-    # com = sigma_pair_g2generator**random_t
-    # h_star = []
-    #
-    # hidden_attributes = [attr for attr in attributes.keys() if attr not in disclosed_attributes]
-    #
-    # for y_t, a in zip(y_g2elem_list, hidden_attributes):
-    #     h_star_i = sigma_p[0].pair(y_t)
-    #     h_star.append(h_star_i)
-    #
-    # com *= exponentiate_attributes(pk.subscriptions, hidden_attributes, attributes, h_star, side='client')
-    # com *= h_star[-1]**client_sk
-    #
-    # # resp, chall = pedersen_commitment_nizkp(random_t, hidden_attributes, sigma_pair_g2generator, h_star, com, message)
-    # proof = PedersenNIZKP(sigma_pair_g2generator, h_star, com, chall, resp)
-    #
-    # return DisclosureProof(sigma_tuple=sigma_p, disclosed_attrs=disclosed_attributes, proof=proof)
+    sigma_pair_g2generator = sigma_p[0].pair(g2_generator)
+    com = sigma_pair_g2generator**random_t
+    h_star = []
+
+    hidden_attributes = [attr for attr in attributes.keys() if attr not in disclosed_attributes]
+
+    for y_t, a in zip(y_g2elem_list, hidden_attributes):
+        h_star_i = sigma_p[0].pair(y_t)
+        h_star.append(h_star_i)
+
+    com *= exponentiate_attributes(pk.subscriptions, hidden_attributes, attributes, h_star, side='client')
+    com *= h_star[-1]**client_sk
+
+    # resp, chall = pedersen_commitment_nizkp(random_t, hidden_attributes, sigma_pair_g2generator, h_star, com, message)
+    proof = PedersenNIZKP(sigma_pair_g2generator, h_star, com, chall, resp)
+
+    return DisclosureProof(sigma_tuple=sigma_p, disclosed_attrs=disclosed_attributes, proof=proof)
 
 def verify_disclosure_proof(
         pk: PublicKey,
