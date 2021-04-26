@@ -5,9 +5,7 @@ Classes that you need to complete.
 from credential import *
 # Optional import
 from serialization import jsonpickle
-#from server import PUBLIC_KEY, SECRET_KEY
 
-# Type aliases
 class State_of_registration:
     """ Private state after issue request """
     def __init__(self, t, private_key, attribute_map, username):
@@ -42,7 +40,7 @@ class Server:
 
     @staticmethod
     def generate_ca(
-            subscriptions: List[str]
+            subscriptions_plus_username: List[str]
         ) -> Tuple[bytes, bytes]:
         """Initializes the credential system. Runs exactly once in the
         beginning. Decides on schemes public parameters and choses a secret key
@@ -59,7 +57,7 @@ class Server:
             You are free to design this as you see fit, but the return types
             should be encoded as bytes.
         """
-        sk, pk = generate_key(subscriptions)
+        sk, pk = generate_key(subscriptions_plus_username)
         e_sk = jsonpickle.encode(sk).encode()
         e_pk = jsonpickle.encode(pk).encode()
         
@@ -114,6 +112,7 @@ class Server:
         """
         pk = jsonpickle.decode(server_pk.decode(), classes=PublicKey)
         disclosure_proof = jsonpickle.decode(signature.decode(), classes=DisclosureProof)
+        
         return verify_disclosure_proof(pk, disclosure_proof, revealed_attributes, message)
 
 
@@ -150,6 +149,7 @@ class Client:
         """
         pk = jsonpickle.decode(server_pk.decode())
         request, state = create_credential_request(pk, subscriptions, username)
+        
         return jsonpickle.encode(request).encode(), state
         
     def process_registration_response(
@@ -173,6 +173,7 @@ class Client:
         response = jsonpickle.decode(server_response.decode(), classes=Signature)
 
         signature = unblind_created_credential(private_state['blinding_factor'], response)
+        
         if not signature.is_valid():
             raise Exception("Server could not issue a credential for chosen subscriptions!")
         
@@ -181,7 +182,6 @@ class Client:
                           signature=signature, username=private_state['username'])
         
         return jsonpickle.encode(credentials).encode()
-
 
     def sign_request(
             self,
@@ -204,6 +204,6 @@ class Client:
         pk = jsonpickle.decode(server_pk.decode(), classes=PublicKey)
         anon_creds = jsonpickle.decode(credentials.decode(), classes=ABC)
         request = create_disclosure_proof(pk, anon_creds.signature, anon_creds.client_sk, anon_creds.username,
-                                          anon_creds.client_attrs, message)
+                                          anon_creds.client_attrs, types, message)
         
         return jsonpickle.encode(request).encode()
