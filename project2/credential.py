@@ -34,6 +34,7 @@ SubscriptionMap = OrderedDict({str: int}) #Maps an attribute to encoded(yes/no)
 ##     CLASSES      ##
 ######################
 
+
 class PublicKey:
     SUBSCRIBED_YES = 3
     SUBSCRIBED_NO = 5
@@ -42,20 +43,24 @@ class PublicKey:
                  y_g2elem_list: List[G2Element], y_g1elem_list: List[G1Element], subscriptions: List[str]):
         self.generator_g1 = generator_g1
         self.generator_g2 = generator_g2
+        
         self.x_g2element = x_g2element
+        
         self.y_g2elem_list = y_g2elem_list[:-2]
         self.g2_y_for_private_key = y_g2elem_list[-1]
         self.g2_y_for_username = y_g2elem_list[-2]
+        
         self.y_g1elem_list = y_g1elem_list[:-2]
         self.g1_y_for_private_key = y_g1elem_list[-1]
         self.g1_y_for_username = y_g1elem_list[-2]
+        
         self.subscriptions = OrderedSet(subscriptions)
         
-        if len(subscriptions) + 2 != len(y_g2elem_list): #+1 because the attributes are client_sk + username + subs
-            raise Exception('The number of attributes for subscription is not 1 less than the number of public keys')
+        if len(subscriptions) + 2 != len(y_g2elem_list): #+2 because the attributes are client_sk + username + subs
+            raise Exception('The number of attributes for subscription is not 2 less than the number of public keys')
 
     def generate_signed_subscriptions_attributes(self, subscriptions):
-        """ Server side: handles the exponentiation of the subriscitions sent by client with the Y_i of pk """
+        """ Server side: handles the exponentiation of the subscriptions sent by client with the Y_i of pk """
         client_subscriptions_set = set(subscriptions)
 
         signed_attributes = G1.neutral_element()
@@ -69,10 +74,9 @@ class PublicKey:
         
         if len(client_subscriptions_set) != 0:
             #ideally all requested subs should be consumed...if one is not, then is invalid
-            raise Exception("Invalid subscription entered in provided subscriptions" )
+            raise Exception("Invalid subscription entered in provided subscriptions")
         
         return signed_attributes
-
 
 
 class SecretKey:
@@ -122,11 +126,13 @@ class PedersenNIZKP:
 
         full_public_component_list = [big_R] + list_of_generators + [message]
         challenge = PedersenNIZKP.hash_public_components(full_public_component_list)
+        
         response = []
 
         for secret, random_r in zip(list_of_secrets, random_r_list):
             s = (random_r + challenge * secret) % GROUP_ORDER.int()
             response.append(s)
+        
         return PedersenNIZKP(commitment, challenge, response)
 
     @staticmethod
@@ -168,8 +174,6 @@ class DisclosureProof:
         self.disclosed_attrs = disclosed_attrs
         self.proof = proof
 
-## SIGNATURE SCHEME ##
-######################
 
 def generate_key(
         subscriptions_plus_username: List[str],
@@ -187,7 +191,9 @@ def generate_key(
     x_g2element = g2_generator ** x_exp
     
     # y1 to yL
-    # +1 takes in account client private key
+    # y1 to y(L-2) for subs
+    # y(L-1) for username
+    # yL for client_sk
     
     for _ in range(0, len(subscriptions_plus_username) + 1):
         y_i = GROUP_ORDER.random().int()
@@ -205,7 +211,6 @@ def generate_key(
 
 ## ISSUANCE PROTOCOL ##
 
-
 def create_credential_request(
         pk: PublicKey,
         client_subscriptions: List[str],
@@ -221,6 +226,7 @@ def create_credential_request(
 
     blinding_factor = GROUP_ORDER.random().int()
     client_private_key = GROUP_ORDER.random().int()
+    
     encoded_client_private_key = pk.g1_y_for_private_key ** client_private_key
     client_commitment = (g1_generator ** blinding_factor) * encoded_client_private_key
 
@@ -230,9 +236,11 @@ def create_credential_request(
                                                                    list_of_generators, client_commitment)
 
     attribute_map = map_attributes_to_YES_NO(pk.subscriptions, client_subscriptions)
+    
     return IssueRequest(proof_of_knowledge), {'blinding_factor': blinding_factor,
                                               'client_private_key': client_private_key,
-                                              'attribute_map': attribute_map, 'username': username}
+                                              'attribute_map': attribute_map,
+                                              'username': username}
 
 def sign_credential_request(
         sk: SecretKey,
@@ -247,6 +255,7 @@ def sign_credential_request(
     """
     g = pk.generator_g1
     list_of_generators = [g, pk.g1_y_for_private_key]
+    
     # verify proof
     if not request.proof.is_valid(list_of_generators):
         return Signature(G1.neutral_element(), G1.neutral_element())
@@ -279,10 +288,12 @@ def unblind_created_credential(
         return Signature(G1.neutral_element(), G1.neutral_element())
     
     sigma_2_p = sigma_2.div((sigma_1 ** blinding_factor)) #unblind
+    
     return Signature(sigma_1, sigma_2_p)
 
 
 ## SHOWING PROTOCOL ##
+
 def create_disclosure_proof(
         pk: PublicKey,
         credential: Signature,
@@ -316,12 +327,16 @@ def create_disclosure_proof(
         h_star.append(h_star_i)
     h_star_private_key = sigma_p[0].pair(pk.g2_y_for_private_key)
     h_star_username = sigma_p[0].pair(pk.g2_y_for_username)
+    
     #selects generators corresponding to hidden attributes
     S, public_generators = exponentiate_attributes(pk.subscriptions, hidden_attributes,
                                                    attributes, h_star, is_server=False)
+    
     client_username_int = int.from_bytes(client_username.encode(), byteorder='big')
+    
     com *= S * h_star_private_key ** client_sk
     com *= h_star_username ** client_username_int
+    
     public_generators = [g_star] + public_generators
     public_generators.append(h_star_private_key)
     public_generators.append(h_star_username)
@@ -356,7 +371,6 @@ def verify_disclosure_proof(
         h_star_i = sigma[0].pair(y_t)
         h_star.append(h_star_i)
 
-
     #form the attribute mapping
     attribute_map = OrderedDict()
     for a in disclosed_attributes:
@@ -380,6 +394,7 @@ def verify_disclosure_proof(
     h_star_username = sigma[0].pair(pk.g2_y_for_username)
     public_generators.append(h_star_private_key)
     public_generators.append(h_star_username)
+    
     #Second check: verify the proof
     return disclosure_proof.proof.is_valid(public_generators, message)
 
@@ -406,6 +421,7 @@ def map_attributes_to_YES_NO(subscriptions, chosen):
     """ Forms an Attribute Map based on chosen subscriptions:
     Chosen ones -> Yes, Not chosen -> No
     Output: AttributeMap = {str: int} """
+    
     client_subs = set(chosen)
     attributes_map = SubscriptionMap
     
@@ -426,10 +442,11 @@ def exponentiate_attributes(subscriptions: OrderedSet[str], chosen_attributes: L
         chosen_attributes: it's the list of attributes to be exponentiated
         subscriptions_map: it's the mapping. Particulary useful when this func is called by the client
                     since it will exponentiate both attributes mapping to yes and no
-        generators_list : is the base
+        generators_list : is the base, GT elements
         side: flag to indicate whether or not it's the server side. Useful because the exponentiation slightly changes
     Output:
-        A GT element """
+        S: GTElement, result of exponentiation
+        list_generator_used: subset of the base"""
         
     chosen_attrs = set(chosen_attributes)
     
