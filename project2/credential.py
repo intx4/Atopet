@@ -58,7 +58,7 @@ class PublicKey:
         """ Server side: handles the exponentiation of the subriscitions sent by client with the Y_i of pk """
         client_subscriptions_set = set(subscriptions)
 
-        signed_attributes = []
+        signed_attributes = G1.neutral_element()
         
         for server_valid_subscription, y in zip(self.subscriptions, self.y_g1elem_list):
             if server_valid_subscription in client_subscriptions_set:
@@ -246,7 +246,7 @@ def sign_credential_request(
     This corresponds to the "Issuer signing" step in the issuance protocol.
     """
     g = pk.generator_g1
-    list_of_generators = [g, pk.g2_y_for_private_key]
+    list_of_generators = [g, pk.g1_y_for_private_key]
     # verify proof
     if not request.proof.is_valid(list_of_generators):
         return Signature(G1.neutral_element(), G1.neutral_element())
@@ -259,7 +259,7 @@ def sign_credential_request(
     sigma_1 = g ** u
     sigma_2 = X * C
     sigma_2 *= pk.generate_signed_subscriptions_attributes(client_subscriptions)
-    sigma_2 *= pk.g1_y_for_username ** int.from_bytes(username.encode())
+    sigma_2 *= pk.g1_y_for_username ** int.from_bytes(username.encode(), byteorder='big')
     sigma_2 = sigma_2 ** u
     
     return Signature(sigma_1, sigma_2)
@@ -319,7 +319,7 @@ def create_disclosure_proof(
     #selects generators corresponding to hidden attributes
     S, public_generators = exponentiate_attributes(pk.subscriptions, hidden_attributes,
                                                    attributes, h_star, is_server=False)
-    client_username_int = int.from_bytes(client_username.encode())
+    client_username_int = int.from_bytes(client_username.encode(), byteorder='big')
     com *= S * h_star_private_key ** client_sk
     com *= h_star_username ** client_username_int
     public_generators = [g_star] + public_generators

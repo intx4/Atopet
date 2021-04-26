@@ -21,7 +21,7 @@ class ABC:
     def __init__(self, client_sk: int, client_attrs: SubscriptionMap, signature: Signature, username):
         self.client_sk = client_sk
         self.client_attrs = client_attrs
-        self.sigma = signature.sigma_tuple
+        self.signature = signature
         self.username = username
         
 class Server:
@@ -203,7 +203,7 @@ class Client:
         """
         pk = jsonpickle.decode(server_pk.decode(), classes=PublicKey)
         anon_creds = jsonpickle.decode(credentials.decode(), classes=ABC)
-        request = create_disclosure_proof(pk, anon_creds.sigma_tuple, anon_creds.client_sk, anon_creds.username,
+        request = create_disclosure_proof(pk, anon_creds.signature, anon_creds.client_sk, anon_creds.username,
                                           anon_creds.client_attrs, message)
         
         return jsonpickle.encode(request).encode()

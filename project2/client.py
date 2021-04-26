@@ -21,7 +21,7 @@ from stroll import Client
 #
 
 
-SERVER_HOSTNAME = "cs523-server"
+SERVER_HOSTNAME = "localhost"
 TOR_PROXY = "socks5h://localhost:9050"
 TOR_HOSTNAME_FILENAME = Path("/client/tor/hidden_service/hostname")
 
