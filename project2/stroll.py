@@ -16,7 +16,7 @@ class State_of_registration:
 
 class ABC:
     """ Attribute based credential to be dumped to file """
-    def __init__(self, client_sk: int, client_attrs: SubscriptionMap, signature: Signature, username):
+    def __init__(self, client_sk: int, client_attrs: OrderedDict, signature: Signature, username):
         self.client_sk = client_sk
         self.client_attrs = client_attrs
         self.signature = signature

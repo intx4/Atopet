@@ -25,9 +25,6 @@ from collections import OrderedDict
 """Public parameters"""
 GROUP_ORDER = G1.order()
 
-""" Aliases """
-SubscriptionMap = OrderedDict({str: int}) #Maps an attribute to encoded(yes/no)
-
 ######################
 
 ######################
@@ -299,7 +296,7 @@ def create_disclosure_proof(
         credential: Signature,
         client_sk: int,
         client_username: str,
-        attributes: SubscriptionMap,
+        attributes: OrderedDict,
         disclosed_attributes: List[str],
         message: bytes
     ) -> (DisclosureProof, bytes):
@@ -340,7 +337,6 @@ def create_disclosure_proof(
     public_generators = [g_star] + public_generators
     public_generators.append(h_star_private_key)
     public_generators.append(h_star_username)
-
     list_of_secrets = [random_t] + [attributes[hidden_attribute] for hidden_attribute in hidden_attributes] + \
                       [client_sk, client_username_int]
     
@@ -351,7 +347,7 @@ def create_disclosure_proof(
 def verify_disclosure_proof(
         pk: PublicKey,
         disclosure_proof: DisclosureProof,
-        disclosed_attributes: SubscriptionMap,
+        disclosed_attributes: OrderedDict,
         message: bytes
     ) -> bool:
     """ Verify the disclosure proof
@@ -422,8 +418,8 @@ def map_attributes_to_YES_NO(subscriptions, chosen):
     Chosen ones -> Yes, Not chosen -> No
     Output: AttributeMap = {str: int} """
     
-    client_subs = set(chosen)
-    attributes_map = SubscriptionMap
+    client_subs = OrderedSet(chosen)
+    attributes_map = OrderedDict()
     
     for sub in subscriptions:
         if sub in client_subs:
@@ -435,7 +431,7 @@ def map_attributes_to_YES_NO(subscriptions, chosen):
 
 
 def exponentiate_attributes(subscriptions: OrderedSet[str], chosen_attributes: List[str],
-                            subscriptions_map: SubscriptionMap, generators_list: List[GTElement], is_server=True):
+                            subscriptions_map: OrderedDict, generators_list: List[GTElement], is_server=True):
     """ Handles the operation of exponentiating a base of GT elements to the provided attributes
     Input:
         subscriptions: it's the ordered set of all subscriptions provided in the public key
