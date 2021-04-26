@@ -444,8 +444,6 @@ def exponentiate_attributes(subscriptions: OrderedSet[str], chosen_attributes: L
         S: GTElement, result of exponentiation
         list_generator_used: subset of the base"""
         
-    chosen_attrs = set(chosen_attributes)
-    
     if is_server:
         exp = -1
     else:
@@ -455,10 +453,9 @@ def exponentiate_attributes(subscriptions: OrderedSet[str], chosen_attributes: L
     list_generators_used = []
     
     for sub, generator in zip(subscriptions, generators_list):
-        if sub in chosen_attrs:
+        if sub in chosen_attributes:
             S *= generator ** ((subscriptions_map[sub] * exp) % GROUP_ORDER.int())
             list_generators_used.append(generator)
-        else:
-            S *= GT.neutral_element()
+
     
     return S, list_generators_used
