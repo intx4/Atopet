@@ -6,14 +6,6 @@ from credential import *
 # Optional import
 from serialization import jsonpickle
 
-class State_of_registration:
-    """ Private state after issue request """
-    def __init__(self, t, private_key, attribute_map, username):
-        self.blinding_factor = t
-        self.private_key = private_key
-        self.attribute_map = attribute_map
-        self.username = username
-
 class ABC:
     """ Attribute based credential to be dumped to file """
     def __init__(self, client_sk: int, client_attrs: OrderedDict, signature: Signature, username):
@@ -132,7 +124,7 @@ class Client:
             server_pk: bytes,
             username: str,
             subscriptions: List[str],
-        ) -> Tuple[bytes, State_of_registration]:
+        ) -> Tuple[bytes, dict]:
         """Prepare a request to register a new account on the server.
 
         Args:

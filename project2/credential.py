@@ -347,7 +347,7 @@ def create_disclosure_proof(
 def verify_disclosure_proof(
         pk: PublicKey,
         disclosure_proof: DisclosureProof,
-        disclosed_attributes: OrderedDict,
+        disclosed_attributes: List[str],
         message: bytes
     ) -> bool:
     """ Verify the disclosure proof
@@ -397,7 +397,8 @@ def verify_disclosure_proof(
 
 """########################################## HELPERS ##########################################"""
 
-def gen_rand_point(G, unity=True):
+def gen_rand_point(unity=True):
+    G = G1
     """ Return a random point in G, G* if unity"""
     while True:
         k = GROUP_ORDER.random().int()
