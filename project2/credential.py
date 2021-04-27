@@ -347,7 +347,7 @@ def create_disclosure_proof(
 def verify_disclosure_proof(
         pk: PublicKey,
         disclosure_proof: DisclosureProof,
-        disclosed_attributes: OrderedDict,
+        disclosed_attributes: List[str],
         message: bytes
     ) -> bool:
     """ Verify the disclosure proof
