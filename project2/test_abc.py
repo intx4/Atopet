@@ -42,7 +42,7 @@ def test_registering_invalid_attributes():
 	
 	# client setup
 	client_name = 'John'
-	client_subscriptions = ['mall', 'sushi']
+	client_subscriptions = ['mall', 'invalid_attribute']
 	client_message = (f"{23445},{6.57890}").encode("utf-8")
 	
 	# create client issue request
@@ -110,7 +110,7 @@ def test_invalid_signature_on_message():
 	                                             client_subscriptions)
 	
 	# the disclosure proof won't be valid
-	assert not server.check_request_signature(server_public_key, b'a_different_message', client_subscriptions,
+	assert not server.check_request_signature(server_public_key, b'a_different_location', client_subscriptions,
 	                                          client_service_request)
 
 def test_invalid_user_commitment():

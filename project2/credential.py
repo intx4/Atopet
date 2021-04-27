@@ -100,7 +100,7 @@ class PedersenNIZKP:
             else:
                 big_R *= generator ** s
         big_R *= self.commitment ** (-self.chall)
-        full_public_components_list = [big_R] + list_of_generators + [message]
+        full_public_components_list = [big_R] + [self.commitment] + list_of_generators + [message]
         computed_challenge = PedersenNIZKP.hash_public_components(full_public_components_list)
         return computed_challenge == self.chall
 
@@ -121,7 +121,7 @@ class PedersenNIZKP:
             else:
                 big_R *= public_encoded_value
 
-        full_public_component_list = [big_R] + list_of_generators + [message]
+        full_public_component_list = [big_R] + [commitment] + list_of_generators + [message]
         challenge = PedersenNIZKP.hash_public_components(full_public_component_list)
         
         response = []
