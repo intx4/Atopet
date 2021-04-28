@@ -8,3 +8,6 @@ pytest
 requests
 hashlib
 ordered_set
+pandas
+numpy
+matplotlib

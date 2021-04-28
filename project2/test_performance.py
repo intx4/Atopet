@@ -8,7 +8,7 @@ from credential import *
 
 file = os.getcwd() + '/performance_analysis/'
 REP = 20
-subscription_num = [75, 100, 150, 200]
+subscription_num = [5, 10, 15, 20, 30, 50, 75, 100, 150, 200]
 
 def test_key_gen():
 	server = Server()
