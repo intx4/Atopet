@@ -11,3 +11,4 @@ ordered_set
 pandas
 numpy
 matplotlib
+sklearn

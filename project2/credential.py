@@ -17,7 +17,7 @@ the functions provided to resemble a more object-oriented interface.
 
 from typing import List, Tuple
 from petrelic.multiplicative.pairing import G1, G2, GT, G1Element, G2Element, GTElement
-from ordered_set import OrderedSet
+#from ordered_set import OrderedSet
 import hashlib
 
 from collections import OrderedDict
@@ -51,7 +51,7 @@ class PublicKey:
         self.g1_y_for_private_key = y_g1elem_list[-1]
         self.g1_y_for_username = y_g1elem_list[-2]
         
-        self.subscriptions = OrderedSet(subscriptions)
+        self.subscriptions = subscriptions
         
         if len(subscriptions) + 2 != len(y_g2elem_list): #+2 because the attributes are client_sk + username + subs
             raise Exception('The number of attributes for subscription is not 2 less than the number of public keys')
@@ -419,7 +419,7 @@ def map_attributes_to_YES_NO(subscriptions, chosen):
     Chosen ones -> Yes, Not chosen -> No
     Output: AttributeMap = {str: int} """
     
-    client_subs = OrderedSet(chosen)
+    client_subs = chosen
     attributes_map = OrderedDict()
     
     for sub in subscriptions:
@@ -431,7 +431,7 @@ def map_attributes_to_YES_NO(subscriptions, chosen):
     return attributes_map
 
 
-def exponentiate_attributes(subscriptions: OrderedSet[str], chosen_attributes: List[str],
+def exponentiate_attributes(subscriptions: List[str], chosen_attributes: List[str],
                             subscriptions_map: OrderedDict, generators_list: List[GTElement], is_server=True):
     """ Handles the operation of exponentiating a base of GT elements to the provided attributes
     Input:
