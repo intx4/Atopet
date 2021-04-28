@@ -3,11 +3,11 @@
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{xcolor}
-\usepackage{blindtext, amsmath, comment, subfig, epsfig }
+\usepackage{blindtext, amsmath, comment, subfig}
 \usepackage{grffile}
 \usepackage{caption}
 %\usepackage{subcaption}
-\usepackage{algorithmic}
+%\usepackage{algorithmic}
 \usepackage[utf8]{inputenc}
 
 
@@ -95,9 +95,44 @@ involving a correct run of the protocol and 4 runs where the client deviate from
 \end{itemize}
 
 \subsection{Evaluation}
-Evaluate your ABC: report communication and computation stats (mean and standard
-deviation). Report statistic on key generation, issuance, signing, and
-verification.
+For the evaluation of the \textit{ABC protocol}, we analyzed how the communication cost in terms of exchanged bytes, and the
+computational cost in terms of runtime, variate in respect to the number of available subscriptions (attributes). The analysis has
+been repeated seperatelly for each of the steps:
+\begin{itemize}
+    \item \textbf{Key Generation}
+    \item \textbf{Issuance phase}
+    \item \textbf{Showing phase - verification of proof}
+    \item \textbf{Showing phase - generation of proof}
+\end{itemize}
+    \begin{figure}[t]
+\centerline{\includegraphics[scale=0.3]{dataflow_keygen}}
+\label{fig1}
+\end{figure}
+    \begin{figure}[t]
+\centerline{\includegraphics[scale=0.3]{runtime_keygen}}
+\label{fig2}
+\end{figure}
+    \begin{figure}[t]
+\centerline{\includegraphics[scale=0.3]{dataflow_issuance}}
+\label{fig3}
+\end{figure}
+    \begin{figure}[t]
+\centerline{\includegraphics[scale=0.3]{runtime_issuance}}
+\label{fig4}
+\end{figure}
+    \begin{figure}[t]
+\centerline{\includegraphics[scale=0.3]{dataflow_showing}}
+\label{fig5}
+\end{figure}
+    \begin{figure}[t]
+\centerline{\includegraphics[scale=0.3]{runtime_showing}}
+\label{fig6}
+\end{figure}
+    \begin{figure}[t]
+\centerline{\includegraphics[scale=0.3]{runtime_verification}}
+\label{fig7}
+\end{figure}
+
 
 \section{(De)Anonymization of User Trajectories}
 
