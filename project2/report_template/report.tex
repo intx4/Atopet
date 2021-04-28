@@ -98,39 +98,32 @@ involving a correct run of the protocol and 4 runs where the client deviate from
 For the evaluation of the \textit{ABC protocol}, we analyzed how the communication cost in terms of exchanged bytes, and the
 computational cost in terms of runtime, variate in respect to the number of available subscriptions (attributes). The analysis has
 been repeated seperatelly for each of the steps:
-\begin{itemize}
-    \item \textbf{Key Generation}
-    \item \textbf{Issuance phase}
-    \item \textbf{Showing phase - verification of proof}
-    \item \textbf{Showing phase - generation of proof}
-\end{itemize}
-    \begin{figure}[t]
-\centerline{\includegraphics[scale=0.3]{dataflow_keygen}}
-\label{fig1}
+\begin{figure}[h!]
+    \includegraphics[width=0.49\linewidth]{../performance_analysis/dataflow_keygen.png}
+    \includegraphics[width=0.49\linewidth]{../performance_analysis/runtime_keygen.png}
+    \caption{Avg dataflow and runtime for the key generation step}
+    \label{fig:keygen}
 \end{figure}
-    \begin{figure}[t]
-\centerline{\includegraphics[scale=0.3]{runtime_keygen}}
-\label{fig2}
+
+\begin{figure}[h!]
+    \includegraphics[width=0.49\linewidth]{../performance_analysis/dataflow_issuance.png}
+    \includegraphics[width=0.49\linewidth]{../performance_analysis/runtime_issuance.png}
+    \caption{Avg dataflow and runtime for the credential issuing process}
+    \label{fig:issuance}
 \end{figure}
-    \begin{figure}[t]
-\centerline{\includegraphics[scale=0.3]{dataflow_issuance}}
-\label{fig3}
+
+
+\begin{figure}[h!]
+    \includegraphics[width=0.49\linewidth]{../performance_analysis/dataflow_showing.png}
+    \includegraphics[width=0.49\linewidth]{../performance_analysis/runtime_showing.png}
+    \caption{avg dataflow and runtime when requesting for the POI service}
+    \label{fig:showing}
 \end{figure}
-    \begin{figure}[t]
-\centerline{\includegraphics[scale=0.3]{runtime_issuance}}
-\label{fig4}
-\end{figure}
-    \begin{figure}[t]
-\centerline{\includegraphics[scale=0.3]{dataflow_showing}}
-\label{fig5}
-\end{figure}
-    \begin{figure}[t]
-\centerline{\includegraphics[scale=0.3]{runtime_showing}}
-\label{fig6}
-\end{figure}
-    \begin{figure}[t]
-\centerline{\includegraphics[scale=0.3]{runtime_verification}}
-\label{fig7}
+
+\begin{figure}[h!]
+    \includegraphics[width=0.49\linewidth]{../performance_analysis/runtime_verification}
+    \caption{avg runtime for the credential verifications}
+    \label{fig:verify}
 \end{figure}
 
 
