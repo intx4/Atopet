@@ -25,8 +25,8 @@ def location_to_cell_id(lat, lon):
     if not (MAP_LAT <= lat < MAP_LAT + MAP_SIZE_LAT) or not (
         MAP_LON <= lon < MAP_LON + MAP_SIZE_LON
     ):
-        raise ValueError("Out of area range.")
-
+        #raise ValueError("Out of area range.")
+        return -1
     i = bisect.bisect(GRID_LAT_POINTS, lat)
     j = bisect.bisect(GRID_LON_POINTS, lon)
     return i * CELL_NUM_LAT + j + 1
