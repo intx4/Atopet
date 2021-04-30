@@ -1,4 +1,4 @@
-version: '3'
+version: '3.6'
 services:
   server:
     build: ./docker/server_img
@@ -17,6 +17,7 @@ services:
       - cs523
     volumes:
     - ./:/client
+    privileged: true
 networks:
   cs523:
     driver: bridge
