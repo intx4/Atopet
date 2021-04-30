@@ -1,7 +1,7 @@
 #!/bin/bash
-i=0
+i=3
 
-while [[ i=$((i+1)) -lt 101 ]]; do
+while [[ i=$((i+1)) -lt 5 ]]; do
   file_name="./finger_printing/network_capture_cell_$i.pcap"
   tshark -w $file_name &
   while read -r line; do
