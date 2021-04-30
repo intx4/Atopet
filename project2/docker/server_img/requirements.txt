@@ -5,4 +5,3 @@ petrelic
 PySocks
 pytest
 requests
-ordered_set
