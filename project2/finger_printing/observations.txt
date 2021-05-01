@@ -1,0 +1,1 @@
+The max size of packets without running the protocol is 609, suggestion is to remove packet of length lower then 615
