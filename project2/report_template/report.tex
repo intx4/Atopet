@@ -53,7 +53,8 @@ Nevertheless, during the development of the \textit{ABC} system, some design cha
     attributes (subscriptions) which are recognized by the server. To this end, we decided to embed the list of available subscriptions
     in the server public key (which follows the description of the paper). The 'attribute domain' is thus formed by the $L-2$ possible
     subscriptions, followed by the username and, following a common approach in designing \textit{ABC} protocols, a client secret key.
-    Clients are expected to choose their subscriptions from the provided set.
+    Clients are expected to choose their subscriptions from the provided set: failing to comply with the protocol on client sidewill result in the
+    abortion of the protocol itself by the server.
     \item \textbf{Attribute encoding}: once we designed the server-client agreement in such a way that each parameter of the public key
     (namely $Y_i$ and $\tilde{Y}_{i}$) was mapped to one attribute, we decided to encode attributes in the following way:
     if the user decides to subscribe to service $i$, then the exponent of parameter $i$ of server public key(i.e the attribute),
@@ -67,7 +68,7 @@ Nevertheless, during the development of the \textit{ABC} system, some design cha
     togheter with a blinding factor $t$. Note that the random blinding factor guarantees \textit{issuer unlinkability}. User commitment $C$ will thus be $g^{t}*Y_{L}^{client\_sk}$. Client will also produce a
     \textit{Non Interactive Zero Knowledge Proof of Knowledge} of his commitment. In order to generate the challenge in a
     non interactive way, we applied \textit{Fiat-Shamir Heuristic} to the \textit{sigma protocol} defined for the
-    \textit{Pedersen's Commitment PK}: the provided challenge was the \textit{sha256} digest of the public parameters
+    \textit{Pedersen's Commitment Proof of Knowledge}: the provided challenge was the \textit{sha256} digest of the public parameters
     (the commitment $C$, the randomness $R$ of the proof, and the public key parameters used for exponentiation, $g$ and $Y_{L}^{client\_sk}$)
     \item \textbf{Fiat-Shamir Heuristic for linking Disclosure Proof to location}: \textit{Fiat Shamir Heuristic} plays also a crucial role when
     linking the \textit{Showing protocol} of the paper to a specific message (i.e client's current location). This prevents a malicious user
@@ -89,7 +90,8 @@ involving a correct run of the protocol and 4 runs where the client deviate from
     \item \texttt{test\_registering\_invalid\_attributes}: client issues a request with an attribute which do not belong to the agreed domain.
     \item \texttt{test\_requesting\_service\_not\_subscribed}: client tries to request a service to which it did not subscribe.
     Implicitly, this will lead to a \textit{Disclosure Proof} which is not valid for the given credentials.
-    \item \texttt{test\_invalid\_signature\_on\_message}: simulates the tentative of a passive adversary to ask for a given service, from its current
+    \item \texttt{test\_invalid\_signature\_on\_message}: simulates a passive adversary who is able to eavesdrop
+    communication between another user and the server, trying to ask for a given service, from its current
     location, by replaying the \textit{Disclosure Proof} sent by a client from a different location.
     \item \texttt{test\_invalid\_user\_commitment}: when creating the issue request, client presents a proof which is not valid for his commitment.
 \end{itemize}
@@ -132,6 +134,10 @@ been repeated seperatelly for each of the steps:
 \subsection{Privacy Evaluation}
 Provide a privacy analysis of the dataset. You should explicitly state your assumptions, adversary
 models, methods, and findings.
+
+\subsubsection{Identity Inference Attack}
+\paragraph{Threat Model}
+qualcosa
 
 \subsection{Defences}
 Propose a defence that users of the service could deploy to protect their privacy.  You
