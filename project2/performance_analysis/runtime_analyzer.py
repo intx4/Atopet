@@ -29,10 +29,8 @@ for path in paths:
 	e = np.append(e, sem)
 	v = np.append(v, var)
 	
-	fig, (ax1, ax2) = plt.subplots(2, constrained_layout=True)
+	fig, ax1 = plt.subplots(1, constrained_layout=True)
 	ax1.set(ylabel='avg runtime in seconds')
 	ax1.set(title='Computational cost '+ path)
 	ax1.errorbar(x, m, yerr=e, fmt='--o', color='blue', ecolor='lightgray', elinewidth=3)
-	ax2.set(xlabel='num_subs', ylabel='variance')
-	ax2.plot(x, v, 'o', color='green')
 	plt.savefig('runtime_' + path + '.png')
