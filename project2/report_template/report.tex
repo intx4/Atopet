@@ -132,12 +132,56 @@ been repeated seperatelly for each of the steps:
 \section{(De)Anonymization of User Trajectories}
 
 \subsection{Privacy Evaluation}
-Provide a privacy analysis of the dataset. You should explicitly state your assumptions, adversary
-models, methods, and findings.
+In this section, we performed a privacy evaluation on the network level of SecretStroll application. We showed how valuable metadata and side information, like IP addresses or location coordinates at query time, can be valuable for an adversary who aims to break users' anonymity. We also provided a countermeasure to try defending against the following attacks.
+
 
 \subsubsection{Identity Inference Attack}
+
+
 \paragraph{Threat Model}
-qualcosa
+For this attack, we considered a \textbf{passive} adversary (i.e \textit{Honest but Curious}). We modelled the adversary as \textbf{global} (i.e she has a full view of the network used by the system, meaning that she can eavesdrop queries made from whichever cell in SecretStroll grid. The adversarial view is represented by \textttt{queries.csv} dataset). More specifically, the adversary in this setting is SecretStroll \textbf{service provider}.\newline
+We assumed the following background knowledge for the adversary: the adversary knows a mapping between users' IP addresses and their name and surname.\newline
+We assumed the adversary computational power to be bounded by Polynomial time.
+
+
+\paragraph{Adversarial Goal}
+The goal of the adversary is to infer users' \textbf{top-3 locations}, namely their home location, their workplace location, and any particular place where they spend their leisure time. By knowing such sensible information and combining with her background knowledge, the adversary can uniquely identify users.
+
+
+\paragraph{Implementation Details}
+\begin{itemize}
+    \item \textbf{Feature Extraction}: the first step for performing the attack was a simple process of feature extraction. We added 3 new columns to the \textit{queries.csv} dataset from the \textit{timestamp} column: \textit{hour} column, representing the hour of the day of the query,
+    \textit{day} column, representing the day of the query and \textit{daytime} column, representing the
+    daytime of the query (for example, a query launched at 10 a.m was labelled as "Morning", whereas a query launched at 10 p.m was labelled as "Night").
+    \item \textbf{Trajectory Analysis}: the second step (optional) was to analyze the "quality" of the provided data: generally, when performing inference on users home or workplace location, the common assumption is that users follow a pattern, meaning that queries collected during the measurements will be launched from a small set of locations per user. Before mounting the attack, we decided to test this assumption. We collected, for each IP address, their daily trajectory (as a time-ordered sequence of latitude and longitude coordinates). We then computed the distance matrix between each pair of daily trajectories using \textit{Frechet Distance}.
+    The results showed that, for each users, trajectories were very similar. Furthermore we could assess that \textit{Frechet Distance} represented a meaningful metric, since for each user we could witness a larger distance between trajectories collected during week days and trajectories collected during weekends (as expected by the different pattern of average people during work days compared to the one during days off).
+
+
+    \begin{figure}[h!]
+    \includegraphics[width=0.49\linewidth]{../privacy_evaluation/daily_trajectories/}
+    \caption{Distance matrix for user TO BE CHOSEN trajectories}
+    \label{fig:matrix}
+    \end{figure}
+
+
+    \item \textbf{Location clustering}: After validating the data, we proceeded to mount the attack. The attack consisted in a simple analysis on the dataset. We first grouped the daytimes we defined in three groups: the first group, \textit{daytime home}, is comprehensive of daytimes "Early" and "Night". Similarly, \textit{daytime work}, comprehends daytimes "Morning" and "Afternoon", while \textit{daytime leisure} the "Evening". Then, for each user, for each daytime group, we filtered queries accordingly and extracted latitudes and longitudes of locations. Then, we fed the coordinates, converted to radians, to the \textbf{DBSCAN} algorithm. After the clusters were formed, we extracted the most numerous one and computed the centroid. Hence, the home location for one user, for example, resulted to be the centroid of the cluster computed with queries filtered by daytime "home". Results are provided in the \textttt{top\_locations.csv} file. It is worth noticing that. for a few users, there were not enough queries during the "Evening" to infer something about their "leisure time" top location.
+\end{itemize}
+
+\subsubsection{De-anonimization of trajectories trough Co-Location}
+
+
+\paragraph{Threat Model}
+For this attack, similarly to the previous one, we considered the adversary to be the \textbf{service provider}. The adversary is thus again a \textbf{passive}, \textbf{global} one, wuth computational power bounded by polynomial time.\newline
+As far as her background knowledge is concerned, we assumed that the adversary knows the names and surnames of a subset of users. Furthermore, we assumed that the adversary has access to a channel of side information about users, more concretely to users' public profiles on social networks.
+
+
+\paragraph{Adversarial Goal}
+The goal of the adversary is to infer the identiy of users for which she does not know a name-IP address mapping. In order to do so, the adversary looks for similarity, on daily basis, on users trajectories, in order to exploit the co-location information provided by her source of side information like the social network profiles. Suppose that IP address "IP A" belongs to a user for whom the adversary knows the identity, Alice. After running the attack, the adversary knows
+that. on day 6, Alice trajectory was very similar to the one of user with ip address "IP B". The adversary exploits her background knowledge and discovers, visiting Alice public profile, that, on day 6, Alice spent the day with her friend Bob. The adversary can thus infer with good probability that user having "IP B" is Bob.
+
+\paragraph{Implementation Details}
+We adopted an approach very similar to step 2 of the previous attack. For each day, we collected each user trajectory. For users whose trajectories were made up of fewer points than the longest trajectory of the day, the last known position was used as padding. We then computed the distance matrix between trajectories, using again \textit{Frechet Distance}. Finally, we used \textbf{DSBSCAN} algorithm in order to find clusters within the trajectories. We reported, for each day where a cluster of size greater than one was found, the users whose trajectories belonged to the same cluster, and the day. The results are provided in the \textttt{users\_trajectories\_similarities.csv} file.
+
 
 \subsection{Defences}
 Propose a defence that users of the service could deploy to protect their privacy.  You
