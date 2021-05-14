@@ -6,6 +6,9 @@ if [[ -n $1 ]]; then
   exit 0
 fi
 while read -r line; do
+  if [[ $line -eq 40 ]]; then
+    continue
+  fi
   tmp=$(find "./finger_printing/raw/cell_$line" -type f -size "$size" | grep -Po '\d+\.pcap$' | grep -Po '\d+')
   declare -a failed_instances
   failed_instances=($tmp)
