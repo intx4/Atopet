@@ -40,21 +40,25 @@ def get_rand_loc_in_neigh(cell_id):
     neighs["bottom"] = False
     neighs["right"] = False
     
-    if (cell_id - 1) % CELL_NUM_LAT != 0:
-        neighs["left"] = True
-    if (cell_id - CELL_NUM_LON) > 0:
-        neighs["top"] = True
-    if (cell_id + CELL_NUM_LON) <= (CELL_NUM_LAT * CELL_NUM_LON):
-        neighs["bottom"] = True
-    if (cell_id + 1) % CELL_NUM_LAT != 1:
-        neighs["right"] = True
+    if (cell_id - 1) % CELL_NUM_LON != 0:
+        if cell_id % CELL_NUM_LON >= 5:
+            neighs["left"] = True
+    if (cell_id - CELL_NUM_LAT) > 0:
+        if cell_id // CELL_NUM_LAT >= 5:
+            neighs["top"] = True
+    if (cell_id + CELL_NUM_LAT) <= (CELL_NUM_LAT * CELL_NUM_LON):
+        if cell_id // CELL_NUM_LAT < 5:
+            neighs["bottom"] = True
+    if (cell_id + 1) % CELL_NUM_LON != 1:
+        if cell_id % CELL_NUM_LON < 5:
+            neighs["right"] = True
     
-    eligibles = ["this"]
+    eligibles = []
     for cell in neighs.items():
         if cell[1] == True:
             eligibles.append(cell[0])
     
-    rand = r.randrange(0, len(eligibles))
+    rand = r.randint(0, len(eligibles)-1)
     choice = eligibles[rand]
     
     if choice == "this":
@@ -68,7 +72,7 @@ def get_rand_loc_in_neigh(cell_id):
     if choice == "right":
         n = cell_id + 1
 
-    # print(f"Choice:{n} from {cell_id}")
+    #print(f"Choice:{n} from {cell_id}")
     n = n - 1  # as index
     extremes_lat = []
     extremes_lon = []
