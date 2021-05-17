@@ -1,4 +1,5 @@
 import bisect
+import random as r
 
 ## Grid parameters
 # Top left corner of the area
@@ -31,3 +32,76 @@ def location_to_cell_id(lat, lon):
     j = bisect.bisect(GRID_LON_POINTS, lon)
     return i * CELL_NUM_LAT + j + 1
 
+""" mimics defense mechanism via randomization """
+def get_rand_loc_in_neigh(cell_id):
+    neighs = {}
+    neighs["left"] = False
+    neighs["top"] = False
+    neighs["bottom"] = False
+    neighs["right"] = False
+    
+    if (cell_id - 1) % CELL_NUM_LAT != 0:
+        neighs["left"] = True
+    if (cell_id - CELL_NUM_LON) > 0:
+        neighs["top"] = True
+    if (cell_id + CELL_NUM_LON) <= (CELL_NUM_LAT * CELL_NUM_LON):
+        neighs["bottom"] = True
+    if (cell_id + 1) % CELL_NUM_LAT != 1:
+        neighs["right"] = True
+    
+    eligibles = ["this"]
+    for cell in neighs.items():
+        if cell[1] == True:
+            eligibles.append(cell[0])
+    
+    rand = r.randrange(0, len(eligibles))
+    choice = eligibles[rand]
+    
+    if choice == "this":
+        n = cell_id
+    if choice == "left":
+        n = cell_id - 1
+    if choice == "top":
+        n = cell_id - CELL_NUM_LON
+    if choice == "bottom":
+        n = cell_id + CELL_NUM_LON
+    if choice == "right":
+        n = cell_id + 1
+
+    # print(f"Choice:{n} from {cell_id}")
+    n = n - 1  # as index
+    extremes_lat = []
+    extremes_lon = []
+    if (n // CELL_NUM_LAT) == 0:
+        extremes_lat.append(MAP_LAT)
+    else:
+        extremes_lat.append(GRID_LAT_POINTS[(n // CELL_NUM_LAT) - 1])
+    extremes_lat.append(GRID_LAT_POINTS[(n // CELL_NUM_LAT)])
+    
+    if (n % CELL_NUM_LON) == 0:
+        extremes_lon.append(MAP_LON)
+    else:
+        extremes_lon.append(GRID_LON_POINTS[(n % CELL_NUM_LON) - 1])
+    extremes_lon.append(GRID_LON_POINTS[(n % CELL_NUM_LON)])
+    
+    print(extremes_lat)
+    lat = r.uniform(extremes_lat[0], extremes_lat[1])
+    print(GRID_LAT_POINTS)
+    print(extremes_lon)
+    lon = r.uniform(extremes_lon[0], extremes_lon[1])
+    print(GRID_LON_POINTS)
+    return lat, lon, n
+
+
+""" TEST
+t = get_rand_loc_in_neigh(1)
+print(location_to_cell_id(t[0],t[1]))
+t = get_rand_loc_in_neigh(10)
+print(location_to_cell_id(t[0],t[1]))
+t = get_rand_loc_in_neigh(56)
+print(location_to_cell_id(t[0],t[1]))
+t = get_rand_loc_in_neigh(91)
+print(location_to_cell_id(t[0],t[1]))
+t = get_rand_loc_in_neigh(100)
+print(location_to_cell_id(t[0],t[1]))
+"""
