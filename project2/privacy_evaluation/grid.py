@@ -84,13 +84,13 @@ def get_rand_loc_in_neigh(cell_id):
         extremes_lon.append(GRID_LON_POINTS[(n % CELL_NUM_LON) - 1])
     extremes_lon.append(GRID_LON_POINTS[(n % CELL_NUM_LON)])
     
-    print(extremes_lat)
+    #print(extremes_lat)
     lat = r.uniform(extremes_lat[0], extremes_lat[1])
-    print(GRID_LAT_POINTS)
-    print(extremes_lon)
+    #print(GRID_LAT_POINTS)
+    #print(extremes_lon)
     lon = r.uniform(extremes_lon[0], extremes_lon[1])
-    print(GRID_LON_POINTS)
-    return lat, lon, n
+    #print(GRID_LON_POINTS)
+    return (lat, lon)
 
 
 """ TEST
