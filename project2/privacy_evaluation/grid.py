@@ -41,19 +41,19 @@ def get_rand_loc_in_neigh(cell_id):
     neighs["right"] = False
     
     if (cell_id - 1) % CELL_NUM_LON != 0:
-        if cell_id % CELL_NUM_LON >= 5:
-            neighs["left"] = True
+        #if cell_id % CELL_NUM_LON >= 5:
+        neighs["left"] = True
     if (cell_id - CELL_NUM_LAT) > 0:
-        if cell_id // CELL_NUM_LAT >= 5:
-            neighs["top"] = True
+        #if cell_id // CELL_NUM_LAT >= 5:
+        neighs["top"] = True
     if (cell_id + CELL_NUM_LAT) <= (CELL_NUM_LAT * CELL_NUM_LON):
-        if cell_id // CELL_NUM_LAT < 5:
-            neighs["bottom"] = True
+        #if cell_id // CELL_NUM_LAT < 5:
+        neighs["bottom"] = True
     if (cell_id + 1) % CELL_NUM_LON != 1:
-        if cell_id % CELL_NUM_LON < 5:
-            neighs["right"] = True
+        #if cell_id % CELL_NUM_LON < 5:
+        neighs["right"] = True
     
-    eligibles = []
+    eligibles = ["this"]
     for cell in neighs.items():
         if cell[1] == True:
             eligibles.append(cell[0])
