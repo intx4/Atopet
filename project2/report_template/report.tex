@@ -17,10 +17,14 @@
 
 \begin{document}
 
+\begin{thebibliography}{}
+\bibitem{Shokri}https://www.researchgate.net/publication/236670805\_Protecting\_location\_privacy\_Optimal\_strategy\_against\_localization\_attacks
+\end{thebibliography}
+
 \maketitle
 
 \begin{abstract}
-    SecretStroll is a privacy preserving LBS. SecretStroll is build on top of 3 core modules: an Anonymous
+    SecretStroll is a privacy preserving LBS, built on top of 3 core modules: an Anonymous
     \textit{Attribute-based Credential protocol} for authorization, <part 2> and <part 3>.
 \end{abstract}
 
@@ -132,7 +136,7 @@ been repeated seperatelly for each of the steps:
 \section{(De)Anonymization of User Trajectories}
 
 \subsection{Privacy Evaluation}
-In this section, we performed a privacy evaluation on the network level of SecretStroll application. We showed how valuable metadata and side information, like IP addresses or location coordinates at query time, can be valuable for an adversary who aims to break users' anonymity. We also provided a countermeasure to try defending against the following attacks.
+In this section, we performed a privacy evaluation on the network level of SecretStroll application. We showed how valuable metadata and side information, like IP addresses or location coordinates at query time, can be, for an adversary who aims to break users' privacy. We also provided a countermeasure to try defending against the two of the following attacks.
 
 
 \subsubsection{Identity Inference Attack}
@@ -171,13 +175,13 @@ The goal of the adversary is to infer users' \textbf{top-3 locations}, namely th
 
 
 \paragraph{Threat Model}
-For this attack, similarly to the previous one, we considered the adversary to be the \textbf{service provider}. The adversary is thus again a \textbf{passive}, \textbf{global} one, wuth computational power bounded by polynomial time.\newline
+For this attack, similarly to the previous one, we considered the adversary to be the \textbf{service provider}. The adversary is thus again a \textbf{passive}, \textbf{global} one, with computational power bounded by polynomial time.\newline
 As far as her background knowledge is concerned, we assumed that the adversary knows the names and surnames of a subset of users. Furthermore, we assumed that the adversary has access to a channel of side information about users, more concretely to users' public profiles on social networks.
 
 
 \paragraph{Adversarial Goal}
-The goal of the adversary is to infer the identiy of users for which she does not know a name-IP address mapping. In order to do so, the adversary looks for similarity, on daily basis, on users trajectories, in order to exploit the co-location information provided by her source of side information like the social network profiles. Suppose that IP address "IP A" belongs to a user for whom the adversary knows the identity, Alice. After running the attack, the adversary knows
-that. on day 6, Alice trajectory was very similar to the one of user with ip address "IP B". The adversary exploits her background knowledge and discovers, visiting Alice public profile, that, on day 6, Alice spent the day with her friend Bob. The adversary can thus infer with good probability that user having "IP B" is Bob.
+The goal of the adversary is to infer the identiy of users for which she does not know a name-IP address mapping. In order to do so, the adversary looks for similarity, on daily basis, on users trajectories, in order to exploit the co-location information provided by her source of side information like the social network profiles. Suppose that IP address "IP A" belongs to a user for whom the adversary knows the identity: Alice. After running the attack, the adversary knows
+that, on day 6, Alice's trajectory was very similar to the one of user with ip address "IP B". The adversary exploits her background knowledge and discovers, visiting Alice public profile, that, on day 6, Alice spent the day with her friend Bob. The adversary can thus infer with good probability that user having "IP B" is Bob.
 
 \paragraph{Implementation Details}
 We adopted an approach very similar to step 2 of the previous attack. For each day, we collected each user trajectory. For users whose trajectories were made up of fewer points than the longest trajectory of the day, the last known position was used as padding. We then computed the distance matrix between trajectories, using again \textit{Frechet Distance}. Finally, we used \textbf{DSBSCAN} algorithm in order to find clusters within the trajectories. We reported, for each day where a cluster of size greater than one was found, the users whose trajectories belonged to the same cluster, and the day. The results are provided in the \textttt{users\_trajectories\_similarities.csv} file.
@@ -189,6 +193,41 @@ should state your assumptions, adversary models, and provide an experimental eva
 defences using the datasets and the grid specification. You should also discuss the
 privacy-utility trade-offs of your defence.
 
+In order to protect users privacy against the attacks we described in section \textit{A}, we designed the following \textit{Location Privacy Preserving Mechanism}. When accessing the application at client side, users will select a parameter $p$, to which we refer as \textit{obfuscation probability}. When performing a query to the service, the application will retain the current user location with probability $1-p$. With probability $p$, the client will choose a random location in the current cell in which the user is located or one of the neighbouring cell (depending if the cell is at one corner of the grid, the number of available neighbours will vary between $2$ and $4$). Thus, the location will be obfuscated with probability $p$, and appear in a different cell with probability \[p*\frac{neighbours}{neighbours+1}\].
+\subsubsection{Adversarial Models}
+The LPPM we designed is aimed to protect users against attacks $1$ and $2$ in section \textit{A}, by introducing noise in the localization mechanism used by the system. Thus, the adversarial models we took into account are the ones we described in the aforementioned attacks. Clearly, the mechanism is ineffective against the adversarial model described in attack $3$.
+\subsubsection{Assumptions}
+When evaluating our mechanism, the following assumptions were made:
+\begin{itemize}
+    \item \textbf{Ground Truth}: Since we were not provided with the ground truth about users in the dataset (i.e the real location of their house and workplace), we assumed the results obtained by the adversary of attack $1$ without the mechanism in place as ground truth.
+    \item \textbf{Strategic Adversary}: In our evaluation, we considered a strategic adversary, i.e we assumed that the adversary knew the details about the mechanism and that she could consequently mount the best attack possible. Nevertheless, we assumed that the adversary did not know the value of $p$ chosen each time by the client.\newline
+    Consequently, the adversary we used for our evaluation was able to dynamically adapt is algorithm. More details about this in the following section about the evaluation.
+\end{itemize}
+\subsubsection{Privacy Gain Evaluation}
+For the evaluation of the Privacy Gain introduced by our mechanism, we simulated the same scenario of attack $1$. The following changes were made:
+\begin{itemize}
+    \item \textbf{Client}: we modified the queries dataset applying the LPPM. In each test, a different value of $p$ was used.
+    \item \textbf{Adversary}: the adversary used the same algorithm described in attack $1$, as we believed that the algorithm could perform well for the adversary even in presence of noise (DBSCAN is capable of labelling points as noise). Nevertheless, taking into account that the adversary is strategic, we modified the algorithm to adapt to the amount of noise detected by DBSCAN. If the clustering algorithm returned at least two points labelled as "not noisy", then the algorithm proceeded as described. If no "not noisy" points were found, the adversary used the centroid of the "noise" cluster as prediction (since the noise added by the mechanism is uniformly added along all directions, there is a probability that by averaging out the noise the adversary can find a good enough prediction).
+\end{itemize}
+As Privacy metric, we used a metric applied in the literature \cite{Shokri}, the \textbf{Adversarial Expected Error}, i.e the distortion introduced by the mechanism in the outcome of the adversary inference in respect to her inference without the mechanism:
+\[Privacy = \sum_{i=1}^{i=n_{users}}haversine(x, \tilde{x})\]
+where $x$ is the original prediction and $\tilde{x}$ is the distorted one. The evaluation took into account both predictions for home and workplace locations. As distance metric, we used the \textit{haversine} distance between the predicted points (as latitude-longitude pairs), in kilometers.
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.49\linewidth]{}
+        \caption{Privacy gain evaluation}
+        \label{fig:my_label}
+    \end{figure}
+\subsubsection{Utility Loss Evaluation}
+For the evaluation of the Utility Loss which the mechanism eventually adds, we reported the percentage of queries for which the mechanism produced a change in the cell identifier in which the user appeared located, against the parameter $p$.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.49\linewidth]{}
+    \caption{Utility Loss evaluation}
+    \label{fig:my_label}
+\end{figure}
+\subsubsection{Utility-Privacy Trade-off}
+As showed in the previous plots, the mechanism parameter $p$ is directly proportional (linearly) to the Privacy Gain of the users as well to the Utility Loss introduced in the application.
 \section{Cell Fingerprinting via Network Traffic Analysis}
 
 \subsection{Implementation details}
