@@ -32,8 +32,9 @@ def location_to_cell_id(lat, lon):
     j = bisect.bisect(GRID_LON_POINTS, lon)
     return i * CELL_NUM_LAT + j + 1
 
-""" mimics defense mechanism via randomization """
+""" With probability 1-p, retain location. Else, select with probability p/5 a random location in this cell or in neighs cell"""
 def get_rand_loc_in_neigh(cell_id):
+    """ mimics defense mechanism via obfuscation: """
     neighs = {}
     neighs["left"] = False
     neighs["top"] = False
