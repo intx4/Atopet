@@ -1,11 +1,12 @@
 import numpy as np
-
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, RepeatedStratifiedKFold
+import pandas as pd
+import sys
 
 
-def classify(train_features, train_labels, test_features, test_labels):
+def classify(train_features, train_labels, test_features):
 
     """Function to perform classification, using a 
     Random Forest. 
@@ -50,19 +51,34 @@ def perform_crossval(features, labels, folds=10):
     to evaluate the performance.         
     """
 
-    kf = StratifiedKFold(n_splits=folds)
+    kf = RepeatedStratifiedKFold(n_splits=folds, n_repeats=10)
     labels = np.array(labels)
     features = np.array(features)
-
+    exact_matches = []
+    
+    epoch = 0
     for train_index, test_index in kf.split(features, labels):
         X_train, X_test = features[train_index], features[test_index]
         y_train, y_test = labels[train_index], labels[test_index]
-        predictions = classify(X_train, y_train, X_test, y_test)
+        predictions = classify(X_train, y_train, X_test)
 
-    ###############################################
-    # TODO: Write code to evaluate the performance of your classifier
-    ###############################################
-
+        ###############################################
+        # TODO: Write code to evaluate the performance of your classifier
+        ###############################################
+        
+        exact_match = 0
+        for prediction, true in zip(predictions, y_test):
+            if prediction == true:
+                exact_match += 1
+        
+        exact_matches.append(exact_match/len(y_test))
+        
+        epoch += 1
+        print(f"Exact match ratio epoch {epoch}: {exact_match/len(y_test)}")
+        
+    exact_matches = np.array(exact_matches)
+    print(f"Avg Exact match ratio: {exact_matches.mean()}. Std: {exact_matches.std()}")
+    
 def load_data():
 
     """Function to load data that will be used for classification.
@@ -94,11 +110,16 @@ def load_data():
     ###############################################
     # TODO: Complete this function. 
     ###############################################
-
-    features = []
     labels = []
+    features = []
+    
+    features_df = pd.read_csv('./finger_printing/features.csv').to_numpy()
+    
+    for row in features_df:
+        labels.append(int(row[0]))
+        features.append(row[1:])
 
-    return features, labels
+    return labels, features
         
 def main():
 
@@ -110,7 +131,7 @@ def main():
     Read about random forests: https://towardsdatascience.com/understanding-random-forest-58381e0602d2
     """
 
-    features, labels = load_data()
+    labels, features = load_data()
     perform_crossval(features, labels, folds=10)
     
 if __name__ == "__main__":
