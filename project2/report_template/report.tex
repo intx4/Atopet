@@ -360,16 +360,16 @@ the same scenario of attack $1$. The following changes were made:
     averaging out the noise the adversary can find a good enough prediction).
 \end{itemize}
 As Privacy metric, we used a metric applied in the literature \cite{Shokri}, the
-\textbf{Adversarial Expected Error}, i.e the distortion introduced by the
+\textbf{Expected Adversarial Error}, i.e the distortion introduced by the
 mechanism in the outcome of the adversary inference in respect to her inference
 without the mechanism:
-\[Privacy = \sum_{i=1}^{i=n_{users}}haversine(x, \tilde{x})\] where $x$ is the
+\[Privacy = \frac{\sum_{i=1}^{i=n_{users}}haversine(x, \tilde{x})}{n_{users}}\] where $x$ is the
 original prediction and $\tilde{x}$ is the distorted one. The evaluation took
 into account both predictions for home and workplace locations. As distance
 metric, we used the \textit{haversine} distance between the predicted points (as
 latitude-longitude pairs), in kilometers.
     \begin{figure}[h!]
-        \centering  
+        \centering
         \includegraphics[width=0.9\linewidth]{../privacy_evaluation/adv_error.png}
         \caption{Privacy gain evaluation}
     \end{figure}
@@ -390,17 +390,45 @@ Loss introduced in the application.
 \section{Cell Fingerprinting via Network Traffic Analysis}
 
 \subsection{Implementation details}
-Provide a description of your implementation here. You should provide details on
-your data collection methods, feature extraction, and classifier training.
-
+\subsubsection{Trace collection}
+//TO DO
+\subsubsection{Filtering}
+Before proceeding with feature extraction, we decided to apply two filters to the captured traces:
+\begin{itemize}
+    \item \textbf{Less than 609 B}: we analyzed the traffic between client and server, using Tor, when the client did not perform any request. We found out that packets were sent. Nevertheless, these packets were all below the size of $609B$. For this reasons, we filtered out packets below this threshold when evesdropping client requests.
+    \item \textbf{Removed TCP ACKs}: Following an approach found in literature \cite{web_fingerprinting}, we decided to remove TCP ACKs sent by the server since they did not carry any payload.
+\end{itemize}
+\subsubsection{Feature Extraction}
+In order to select a suitable set of features for the classification task, we followed the features presented in the lecture notes, as well as in literature \cite{web_fingerprinting}:
+\begin{itemize}
+    \item 1 - Total number of packets.
+    \item 2 - Number of incoming packets from server.
+    \item 3 - Ratio between number of incoming packets and total number of packets.
+    \item 4 - Ratio between number of packets sent by client and total.
+    \item 5 - Total number of bytes exchanged in KB.
+    \item 6 - Number of incoming bytes in KB.
+    \item 7 - Ratio between incoming bytes and total bytes.
+    \item 8 - Ratio between bytes sent by client and total bytes.
+    \item 9 - Average size of incoming packets in KB.
+    \item 10 - Markers: how many time the direction of flow changes in the capture.
+    \item 19 - 21 Top 3 Bursts size in KB.
+    \item 22 - 24 Top 3 Bursts timestamp in seconds.
+    \item 25 - 27 Top 3 Bursts sequence number in capture.
+    \item 28 - 29 Percentage fluctuation in packet sizes, i.e ratio between first packet size and median packet size, and between median and last packet sizes.
+    \item 30 Average time interval between incoming packets in nanoseconds.
+\end{itemize}
 \subsection{Evaluation}
-Provide an evaluation of your classifier here -- the metrics after 10-fold cross
-validation.
+In order to perform the multi-label classification, we trained a \textit{Random Forest Classifier} provided by the \texttt{sklearn} library. In order to evaluate the performance of the classifier, we used the Exact Match Ratio metric, since in this specific case of distinguishing cell identifiers there is no notion of \textit{partial correctness}. As validation method, we used a 10-fold stratified cross validation, and repeated the evaluation 50 times.
+
 
 \subsection{Discussion and Countermeasures}
+
 Comment on your findings here. How well did your classifier perform? What
 factors could influence its performance? Are there countermeasures against this
 kind of attack?
+
+The overall result of the model was good, scoring an accuracy of $0.83$ with a standard deviation of $0.02$.
+
 
 \printbibliography
 
