@@ -2,6 +2,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold, RepeatedStratifiedKFold
+from sklearn.model_selection import cross_val_score
+from sklearn import metrics
 import pandas as pd
 import sys
 
@@ -78,6 +80,12 @@ def perform_crossval(features, labels, folds=10):
         
     exact_matches = np.array(exact_matches)
     print(f"Avg Exact match ratio: {exact_matches.mean()}. Std: {exact_matches.std()}")
+
+def cross_validator(features, labels):
+    clf = RandomForestClassifier()
+    cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=5)
+    scores = cross_val_score(clf, features, labels, cv=cv)
+    print(f"Avg Exact match ratio: {scores.mean()}. Std: {scores.std()}")
     
 def load_data():
 
@@ -132,8 +140,8 @@ def main():
     """
 
     labels, features = load_data()
-    perform_crossval(features, labels, folds=10)
-    
+    #perform_crossval(features, labels, folds=10)
+    cross_validator(features,labels)
 if __name__ == "__main__":
     try:
         main()
