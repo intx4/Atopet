@@ -1,6 +1,4 @@
-,,cell_id,count
-,,max,max
-ip_address,daytime,,
+ip_address,daytime,cell_id,count
 0.98.248.97,1.Early,61,3
 0.98.248.97,2.Morning,92,3
 0.98.248.97,3.Afternoon,63,2
