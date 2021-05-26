@@ -86,6 +86,8 @@ def cross_validator(features, labels):
     cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=5)
     scores = cross_val_score(clf, features, labels, cv=cv)
     print(f"Avg Exact match ratio: {scores.mean()}. Std: {scores.std()}")
+    with open('classifier_score.txt', 'w') as f:
+        f.write(f"Avg Exact match ratio: {scores.mean()}. Std: {scores.std()}. Entries {len(labels)}. Epochs: {50}")
     
 def load_data():
 
