@@ -1,5 +1,5 @@
 #!/bin/bash
-i=0
+i=2
 while [[ i=$((i+1)) -lt 101 ]]; do
   # Change this to change the ouptut file index
   it=30
@@ -15,5 +15,4 @@ while [[ i=$((i+1)) -lt 101 ]]; do
     it=$((it+1))
   done <./finger_printing/run_commands.txt
   echo "next $((i+1))"
-  break
 done

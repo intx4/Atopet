@@ -83,7 +83,7 @@ def perform_crossval(features, labels, folds=10):
 
 def cross_validator(features, labels):
     clf = RandomForestClassifier()
-    cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=50)
+    cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=5)
     scores = cross_val_score(clf, features, labels, cv=cv)
     print(f"Avg Exact match ratio: {scores.mean()}. Std: {scores.std()}")
     
@@ -141,7 +141,7 @@ def main():
 
     labels, features = load_data()
     #perform_crossval(features, labels, folds=10)
-    cross_validator(features,labels)
+    cross_validator(features, labels)
 if __name__ == "__main__":
     try:
         main()
