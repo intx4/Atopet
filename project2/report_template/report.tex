@@ -14,6 +14,13 @@
 \author{Author 1, Author 2}
 \date{April 2020}
 
+
+
+\addtolength{\oddsidemargin}{-.21in}
+\addtolength{\textwidth}{0.35in}
+\addtolength{\topmargin}{-.075in}
+\addtolength{\textheight}{.5in}
+
 \begin{document}
 
 
@@ -21,9 +28,8 @@
 \maketitle
 
 \begin{abstract}
-    SecretStroll is a privacy preserving LBS, built on top of 3 core modules: an
-    Anonymous \textit{Attribute-based Credential protocol} for authorization,
-    <part 2> and <part 3>.
+    SecretStroll is a Location Based System, developed following a Privacy by Design paradigm. Nonetheless, users'
+    privacy is threatened by many sides.
 \end{abstract}
 
 \section{Introduction}
@@ -34,26 +40,26 @@ to the description of "restaurant").\newline
 LBS are prone to be privacy-sensitive system: if not implemented following a
 \textit{Privacy by Design} paradigm, they can leak many information about users,
 such as their location and movement patterns, which can lead to more
-privacy-disruptive disclosure attacks. For this reason, we designed SecretStroll
+privacy-disruptive attacks. For this reason, we designed SecretStroll
 by identifying layers at which the system could potentially leak information and
 implementing privacy-preserving mechanism at each layer.\newline
-SecretStroll is formed by 3 core layers: an \textit{Attribute-based Credential}
-protocol, <part2> and <part3>.
 \subsection{Attribute-based credential}
 SecretStroll exploits an Attribute-based credential Protocol to authorize users
-to fetch POIs of a given type, for which they must have subscribed to. At
-issuing time, users will provide their username together to a set subscriptions
-(i.e types of POIs) which are currently supported by SecretStroll system.
-SecretStroll server will verify the validity of user's request and generate a
-valid credential for the specified subscriptions and username. Users will later
-show their credentials together with a subset of their subscriptions: in this
-step, the \textit{Showing protocol}, users will have to prove to the server to
-have a valid credential over their attributes (including, but not limited to,
-their subscriptions). Users will also use their credential to perform a digital
-signature on their current location. If the proof suceeds, the server will reply
-with a list of POIs matching the types requested by the user.
-\subsection{part 2}
+to fetch POIs of a given type, for which they must have subscribed to. The ABC protocol serves to purposes:
+first, it allows the server to check whether a user request is valid, w.r.t the payment status of the
+user for that service. Secondly, it guarantees anonymity to the users, since the server will not be able
+to link a credential to a user after subsequent requests.
+\subsection{(De)Anonymization of User Trajectories}
+ABC alone are not enough in order to guarantee users privacy. In particular, if the server is
+able to observe users metadata, such as their IP Address, the ABC scheme clearly looses its
+\textit{unlinkability} property. We analyzed the consequences on users' privacy of attacks
+mounted by an adversary with access to such metadata, and we evaluated a defence mechanism aimed to mitigate
+such attacks.
 \subsection{part 3}
+SecretStroll exploits the Tor Network in order not to leak metadata at Network level. Nevertheless, we
+evaluated the privacy offered by this solution. In particular, supposing that an adversary were able to
+sniff the traffic between a client and the entry guard of Tor network, we mounted a \textit{web fingerprinting}
+attack to try inferring the grid location of the user querying the service.
 \section{Attribute-based credential}
 For the implementation of the authorization through \textit{Attribute-based
 credentials}, we have carefully followed the protocol described by
@@ -147,7 +153,7 @@ protocol in different ways:
 For the evaluation of the \textit{ABC protocol}, we analyzed how the
 communication cost in terms of exchanged bytes, and the computational cost in
 terms of runtime, variate in respect to the number of available subscriptions
-(attributes). The analysis has been repeated seperatelly for each of the steps:
+(attributes). The analysis has been repeated separately for each of the steps:
 \begin{figure}[h!]
     \includegraphics[width=0.49\linewidth]{../performance_analysis/dataflow_keygen.png}
     \includegraphics[width=0.49\linewidth]{../performance_analysis/runtime_keygen.png}
@@ -181,10 +187,7 @@ terms of runtime, variate in respect to the number of available subscriptions
 
 \subsection{Privacy Evaluation}
 In this section, we performed a privacy evaluation on the network level of
-SecretStroll application. We showed how valuable metadata and side information,
-like IP addresses or location coordinates at query time, can be used, for an
-adversary who aims to break users' privacy. We also provided a countermeasure to
-try defending against the two of the following attacks.
+SecretStroll application.
 
 
 \subsubsection{Identity Inference Attack}
@@ -215,16 +218,14 @@ users.
     \item \textbf{Feature Extraction}: the first step for performing the attack
     was a simple process of feature extraction. We added 3 new columns to the
     \textit{queries.csv} dataset from the \textit{timestamp} column:
-    \textit{hour} column, representing the hour of the day of the query,
-    \textit{day} column, representing the day of the query and \textit{daytime}
-    column, representing the daytime of the query (for example, a query launched
-    at 10 a.m was labelled as "Morning", whereas a query launched at 10 p.m was
-    labelled as "Night").
-    \item \textbf{Trajectory Analysis}: the second step (optional) was to
+    \textit{hour} column,
+    \textit{day} column, and \textit{daytime}
+    column(for example, a query launched
+    at 10 a.m was labelled as "Morning").
+    \item \textbf{Trajectory Analysis}: the second step was to
     analyze the "quality" of the provided data: generally, when performing
     inference on users home or workplace location, the common assumption is that
-    users follow a pattern, meaning that queries collected during the
-    measurements will be launched from a small set of locations per user. Before
+    users follow a habitual pattern. Before
     mounting the attack, we decided to test this assumption. We collected, for
     each IP address, their daily trajectory (as a time-ordered sequence of
     latitude and longitude coordinates). We then computed the distance matrix
@@ -247,18 +248,14 @@ users.
 
     \item \textbf{Location clustering}: After validating the data, we proceeded
     to mount the attack. The attack consisted in a simple analysis on the
-    dataset. We first grouped the daytimes we defined in three groups: the first
-    group, \textit{daytime home}, is comprehensive of daytimes "Early" and
-    "Night". Similarly, \textit{daytime work}, comprehends daytimes "Morning"
-    and "Afternoon", while \textit{daytime leisure} the "Evening". Then, for
-    each user, for each daytime group, we filtered queries accordingly and
+    dataset. We first grouped the daytimes we defined in three groups ("home", "work", "leisure"): for example, the group \textit{daytime home},
+    was comprehensive of daytimes "Early" and "Night". Then, for
+    each user, for each daytime group,we
     extracted latitudes and longitudes of locations. Then, we fed the
-    coordinates, converted to radians, to the \textbf{DBSCAN} algorithm. After
-    the clusters were formed, we extracted the most numerous one and computed
-    the centroid. Hence, the home location for one user, for example, resulted
-    to be the centroid of the cluster computed with queries filtered by daytime
-    "home". Results are provided in the \texttt{top\_locations.csv} file. It is
-    worth noticing that. for a few users, there were not enough queries during
+    coordinates to the \textbf{DBSCAN} algorithm. After
+    the clusters were formed, we filtered out the noise and computed
+    the centroid of the biggest cluster. Results are provided in the \texttt{top\_locations.csv} file. It is
+    worth noticing that, for a few users, there were not enough queries during
     the "Evening" to infer something about their "leisure time" top location.
 \end{itemize}
 
@@ -271,7 +268,7 @@ be the \textbf{service provider}. The adversary is thus again a
 \textbf{passive}, \textbf{global} one, with computational power bounded by
 polynomial time.\newline
 As far as her background knowledge is concerned, we assumed that the adversary
-knows the names and surnames of a subset of users. Furthermore, we assumed that
+knows the identity of a subset of users. Furthermore, we assumed that
 the adversary has access to a channel of side information about users, more
 concretely to users' public profiles on social networks.
 
@@ -280,8 +277,7 @@ concretely to users' public profiles on social networks.
 The goal of the adversary is to infer the identity of users for which she does
 not know a name-IP address mapping. In order to do so, the adversary looks for
 similarity, on daily basis, on users trajectories, in order to exploit the
-co-location information provided by her source of side information like the
-social network profiles. Suppose that IP address "IP A" belongs to a user for
+co-location information provided by her source of side information. Suppose that IP address "IP A" belongs to a user for
 whom the adversary knows the identity: Alice. After running the attack, the
 adversary knows that, on day 6, Alice's trajectory was very similar to the one
 of user with ip address "IP B". The adversary exploits her background knowledge
@@ -302,12 +298,6 @@ are provided in the \texttt{users\_trajectories\_similarities.csv} file.
 
 
 \subsection{Defences}
-Propose a defence that users of the service could deploy to protect their
-privacy.  You should state your assumptions, adversary models, and provide an
-experimental evaluation of your defences using the datasets and the grid
-specification. You should also discuss the privacy-utility trade-offs of your
-defence.
-
 In order to protect users privacy against the attacks we described in section
 \textit{A}, we designed the following \textit{Location Privacy Preserving
 Mechanism}. When accessing the application at client side, users will select a
@@ -316,9 +306,7 @@ performing a query to the service, the application will retain the current user
 location with probability $1-p$. With probability $p$, the client will choose a
 random location in the current cell in which the user is located or one of the
 neighbouring cell (depending if the cell is at one corner of the grid, the
-number of available neighbours will vary between $2$ and $4$). Thus, the
-location will be obfuscated with probability $p$, and appear in a different cell
-with probability \[p*\frac{neighbours}{neighbours+1}\].
+number of available neighbours will vary between $2$ and $4$).
 \subsubsection{Adversarial Models}
 The LPPM we designed is aimed to protect users against attacks $1$ and $2$ in
 section \textit{A}, by introducing noise in the localization mechanism used by
@@ -395,11 +383,11 @@ Loss introduced in the application.
 \subsubsection{Filtering}
 Before proceeding with feature extraction, we decided to apply two filters to the captured traces:
 \begin{itemize}
-    \item \textbf{Less than 609 B}: we analyzed the traffic between client and server, using Tor, when the client did not perform any request. We found out that packets were sent. Nevertheless, these packets were all below the size of $609B$. For this reasons, we filtered out packets below this threshold when evesdropping client requests.
+    \item \textbf{Less than 609 B}: we analyzed the traffic between client and server, using Tor, when the client did not perform any request. We found out that packets were sent. Nevertheless, these packets were all below the size of $609B$. In particular, we have seen that at TLS level the frame size was $543 B$ , that appears to be standard for TLS application data sent inside single TOR cells.  For this reasons, we filtered out packets below this threshold when evesdropping client requests.
     \item \textbf{Removed TCP ACKs}: Following an approach found in literature \cite{web_fingerprinting}, we decided to remove TCP ACKs sent by the server since they did not carry any payload.
 \end{itemize}
 \subsubsection{Feature Extraction}
-In order to select a suitable set of features for the classification task, we followed the features presented in the lecture notes, as well as in literature \cite{web_fingerprinting}:
+In order to select a suitable set of features for the classification task, we tried to follow the features presented in the lecture notes, as well as in literature \cite{web_fingerprinting}:
 \begin{itemize}
     \item 1 - Total number of packets.
     \item 2 - Number of incoming packets from server.
@@ -411,23 +399,20 @@ In order to select a suitable set of features for the classification task, we fo
     \item 8 - Ratio between bytes sent by client and total bytes.
     \item 9 - Average size of incoming packets in KB.
     \item 10 - Markers: how many time the direction of flow changes in the capture.
-    \item 19 - 21 Top 3 Bursts size in KB.
-    \item 22 - 24 Top 3 Bursts timestamp in seconds.
-    \item 25 - 27 Top 3 Bursts sequence number in capture.
-    \item 28 - 29 Percentage fluctuation in packet sizes, i.e ratio between first packet size and median packet size, and between median and last packet sizes.
-    \item 30 Average time interval between incoming packets in nanoseconds.
+    \item 11 - 13 Top 3 Bursts size in KB.
+    \item 14 - 16 Top 3 Bursts timestamp in seconds.
+    \item 17 - 19 Top 3 Bursts sequence number in capture.
+    \item 20 - 21 Percentage fluctuation in packet sizes, i.e ratio between first packet size and median packet size, and between median and last packet sizes.
+    \item 22 Average time interval between incoming packets in nanoseconds.
 \end{itemize}
 \subsection{Evaluation}
-In order to perform the multi-label classification, we trained a \textit{Random Forest Classifier} provided by the \texttt{sklearn} library. In order to evaluate the performance of the classifier, we used the Exact Match Ratio metric, since in this specific case of distinguishing cell identifiers there is no notion of \textit{partial correctness}. As validation method, we used a 10-fold stratified cross validation, and repeated the evaluation 50 times.
-
+In order to perform the multi-label classification, we trained a \textit{Random Forest Classifier} provided by the \texttt{sklearn} library. In order to evaluate the performance of the classifier, we used the Exact Match Ratio metric. As validation method, we used a 10-fold stratified cross validation, and repeated the evaluation 5 times.
 
 \subsection{Discussion and Countermeasures}
+The overall result of the model was very good, scoring an accuracy of $0.926$ with a standard deviation of $0.006$.
+The attack achieved good results even with less traces, scoring around $0.82$ accuracy with $0.02$ standard deviation with just 30 samples per cell.
+This very effective attack represents one of the limitation of Tor system. Nevertheless, it is possible to adopt some countermeasures in order to lower the success rate (i.e accuracy, in this case), of the attack. For example, one technique could be \textit{traffic morphing}. Moverover, in this case, the defense mechanism could be applied server side. Since the classifier we built mainly relies on packets size and timing, \textit{SecretStroll} server could try to uniform data from all the cells, for example adding decoy POIs, in order to pad the response for every grid queried by the user such that they all have the same lenght. Furthermore, it could add some random delay between sending packets (at cost of latency), so to hide the peculiar timing for each cell response.
 
-Comment on your findings here. How well did your classifier perform? What
-factors could influence its performance? Are there countermeasures against this
-kind of attack?
-
-The overall result of the model was good, scoring an accuracy of $0.83$ with a standard deviation of $0.02$.
 
 
 \printbibliography
