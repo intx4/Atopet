@@ -17,9 +17,9 @@
 
 
 \addtolength{\oddsidemargin}{-.21in}
-\addtolength{\textwidth}{0.35in}
-\addtolength{\topmargin}{-.075in}
-\addtolength{\textheight}{.5in}
+\addtolength{\textwidth}{0.25in}
+\addtolength{\topmargin}{-.15in}
+\addtolength{\textheight}{.15in}
 
 \begin{document}
 
@@ -28,21 +28,19 @@
 \maketitle
 
 \begin{abstract}
-    SecretStroll is a Location Based System, developed following a Privacy by Design paradigm. Nonetheless, users'
-    privacy is threatened by many sides.
+    This paper aims to describe our design choice for the "SecretStroll" LBS system, together with a Privacy Evaluation of the system itself.
 \end{abstract}
 
 \section{Introduction}
 SecretStroll is a Location Based System (LBS), which aims to provide users with
 information about Points of Interest (POI) near their location, satisfying
-user-specified criteria (i.e retrieve POIs near user location which correspond
-to the description of "restaurant").\newline
+user-specified criteria.\newline
 LBS are prone to be privacy-sensitive system: if not implemented following a
 \textit{Privacy by Design} paradigm, they can leak many information about users,
 such as their location and movement patterns, which can lead to more
 privacy-disruptive attacks. For this reason, we designed SecretStroll
 by identifying layers at which the system could potentially leak information and
-implementing privacy-preserving mechanism at each layer.\newline
+implementing privacy-preserving mechanism to try mitigating such leaks. We also conducted a privacy evaluation of the system.\newline
 \subsection{Attribute-based credential}
 SecretStroll exploits an Attribute-based credential Protocol to authorize users
 to fetch POIs of a given type, for which they must have subscribed to. The ABC protocol serves to purposes:
@@ -55,9 +53,9 @@ able to observe users metadata, such as their IP Address, the ABC scheme clearly
 \textit{unlinkability} property. We analyzed the consequences on users' privacy of attacks
 mounted by an adversary with access to such metadata, and we evaluated a defence mechanism aimed to mitigate
 such attacks.
-\subsection{part 3}
+\subsection{Fingerprinting attack on Tor}
 SecretStroll exploits the Tor Network in order not to leak metadata at Network level. Nevertheless, we
-evaluated the privacy offered by this solution. In particular, supposing that an adversary were able to
+evaluated the privacy offered by this solution. In particular, supposing that an adversary was able to
 sniff the traffic between a client and the entry guard of Tor network, we mounted a \textit{web fingerprinting}
 attack to try inferring the grid location of the user querying the service.
 \section{Attribute-based credential}
@@ -72,36 +70,27 @@ solve, and it is worth highlighting their solution:
     must agree on the public parameters, including the number $L$ of possible
     attributes. Moreover, users should choose attributes (subscriptions) which
     are recognized by the server. To this end, we decided to embed the list of
-    available subscriptions in the server public key (which follows the
-    description of the paper). The 'attribute domain' is thus formed by the
-    $L-2$ possible subscriptions, followed by the username and, following a
-    common approach in designing \textit{ABC} protocols, a client secret key.
+    available subscriptions in the server public key. The 'attribute domain' is thus formed by the
+    $L-2$ possible subscriptions, followed by the username and a client secret key.
     Clients are expected to choose their subscriptions from the provided set:
-    failing to comply with the protocol on client sidewill result in the
-    abortion of the protocol itself by the server.
+    failing to comply with the protocol on client side will result in the
+    abortion by the server.
     \item \textbf{Attribute encoding}: once we designed the server-client
-    agreement in such a way that each parameter of the public key (namely $Y_i$
-    and $\tilde{Y}_{i}$) was mapped to one attribute, we decided to encode
+    agreement in such a way that each parameter of the public key was mapped to one attribute, we decided to encode
     attributes in the following way: if the user decides to subscribe to service
-    $i$, then the exponent of parameter $i$ of server public key(i.e the
-    attribute), will be a fixed prime number in $Z_p$ (where $p$ is the order of
-    the prime groups defined in the paper), to which we refer as
-    \texttt{SUBSCRIBED\_YES}. Conversely, any service to which the client does
-    not subscribe, will be encoded with a different fixed prime,
-    \texttt{SUBSCRIBED\_NO}. The 'username' attribute will be encoded through
-    \texttt{int.from\_bytes(username.encode(), 'big')} method available in
-    \texttt{python}. Client secret key will be a random number in $Z_p$.
-    \item \textbf{Fiat-Shamir Heuristic for Issuance Request}: the
-    \textit{Issuance Protocol} once again follow thoroughly the paper
-    description. Client will choose their \textit{user-defined} attributes,
-    which in our implementation will simply be its secret key, togheter with a
+    $i$, then the exponent of public key parameter $i$ is a fixed prime number in $Z_p$ (where $p$ is the order of
+    the prime groups defined in the paper): \texttt{SUBSCRIBED\_YES}. Conversely, any service to which the client does
+    not subscribe, is encoded with a different fixed prime:
+    \texttt{SUBSCRIBED\_NO}. The 'username' attribute is encoded through
+    \texttt{int.from\_bytes(username.encode(), 'big')}. Client secret key is a random number in $Z_p$.
+    \item \textbf{Fiat-Shamir Heuristic for Issuance Request}: Clients choose their \textit{user-defined} attributes,
+    which in our implementation are the secret key and username, together with a
     blinding factor $t$. Note that the random blinding factor guarantees
     \textit{issuer unlinkability}. User commitment $C$ will thus be
-    $g^{t}*Y_{L}^{client\_sk}$. Client will also produce a \textit{Non
-    Interactive Zero Knowledge Proof of Knowledge} of his commitment. In order
+    $g^{t}*Y_{L}^{client\_sk}$. Client will also produce a \textit{NIZKP} of his commitment. In order
     to generate the challenge in a non interactive way, we applied
     \textit{Fiat-Shamir Heuristic} to the \textit{sigma protocol} defined for
-    the \textit{Pedersen's Commitment Proof of Knowledge}: the provided
+    the \textit{Pedersen's Commitment PK}: the provided
     challenge was the \textit{sha256} digest of the public parameters (the
     commitment $C$, the randomness $R$ of the proof, and the public key
     parameters used for exponentiation, $g$ and $Y_{L}^{client\_sk}$)
@@ -110,24 +99,20 @@ solve, and it is worth highlighting their solution:
     linking the \textit{Showing protocol} of the paper to a specific message
     (i.e client's current location). This prevents a malicious user
     eavesdropping communication to steal one user's credential in order to gain
-    access to the service from its current location. In order to apply
+    access to the service from its current location, different from the one of the user. In order to apply
     \textit{Fiat-Shamir Heuristic}, we modelled the \textit{Disclosure Proof} as
-    a regular \textit{NIZKP} on a Pedersen's Commitment, where generators belong
-    to the $G_T$ group.\newline
-    In this specific setting, the user commitment is: \[C=e(\sigma_{1}^{`},
-    \tilde{g})^t\prod_{i \in H}e(\tilde{Y}_{i}^{a_i},\tilde{g})\]Thus, the
-    generators in the Proof of Knowledge are $e(\sigma_{1}^{`}, \tilde{g})$ and
-    $e(\tilde{Y}_{i}^{a_i},\tilde{g})$. In order to link the location to the
+    a regular \textit{NIZKP} on Pedersen's Commitment, where generators belong
+    to the $G_T$ group: \[PK\{(t,a_i), i \in H : C=e(\sigma_{1}^{`},
+    \tilde{g})^t\prod_{i \in H}e(\tilde{Y}_{i}^{a_i},\tilde{g})\}\]
+    Thus, the generators in the Proof of Knowledge are $e(\sigma_{1}^{`}, \tilde{g})$ and
+    $e(\tilde{Y}_{i},\tilde{g})$. In order to link the location to the
     proof, we used a \textit{Schnorr's Signature}, producing the challenge as:
-    \[c = sha256(R|C|public\_parameters|location)\] The server validations
-    follows two steps: first, it checks it can recompute client's commitment via
+    \[c = sha256(R|C|public\_parameters|location)\]
+    The server validations follows two steps: first, it checks it can recompute client's commitment via
     the \textit{bilinear} property of the pairing:
     \[C = e(\sigma_2^`,\tilde{g})\prod_{i \in
     D}e(\sigma_1^`,\tilde{Y}_i)^{-a_i}e(\sigma_1^`,\tilde{X})^{-1}\] Secondly,
-    it checks the validity of the proof on client's commitment. Also, it is
-    worth noticing that the \textit{ABC} protocol fulfills both selective
-    disclosure and, thanks to the randomization of the signature $\sigma$,
-    verifier unlinkability.
+    it checks the validity of the proof on client's commitment.
 \end{itemize}
 \subsection{Test}
 In order to test the correctness of our \textit{ABC protocol}, we implemented a
@@ -152,32 +137,31 @@ protocol in different ways:
 \subsection{Evaluation}
 For the evaluation of the \textit{ABC protocol}, we analyzed how the
 communication cost in terms of exchanged bytes, and the computational cost in
-terms of runtime, variate in respect to the number of available subscriptions
-(attributes). The analysis has been repeated separately for each of the steps:
+terms of runtime, variate in respect to the number of available subscriptions:
 \begin{figure}[h!]
-    \includegraphics[width=0.49\linewidth]{../performance_analysis/dataflow_keygen.png}
-    \includegraphics[width=0.49\linewidth]{../performance_analysis/runtime_keygen.png}
+    \includegraphics[width=0.4\linewidth]{../performance_analysis/dataflow_keygen.png}
+    \includegraphics[width=0.4\linewidth]{../performance_analysis/runtime_keygen.png}
     \caption{Avg dataflow and runtime for the key generation step}
     \label{fig:keygen}
 \end{figure}
 
 \begin{figure}[h!]
-    \includegraphics[width=0.49\linewidth]{../performance_analysis/dataflow_issuance.png}
-    \includegraphics[width=0.49\linewidth]{../performance_analysis/runtime_issuance.png}
-    \caption{Avg dataflow and runtime for the credential issuing process}
+    \includegraphics[width=0.4\linewidth]{../performance_analysis/dataflow_issuance.png}
+    \includegraphics[width=0.4\linewidth]{../performance_analysis/runtime_issuance.png}
+    \caption{Avg dataflow and runtime for the credential issuing}
     \label{fig:issuance}
 \end{figure}
 
 
 \begin{figure}[h!]
-    \includegraphics[width=0.49\linewidth]{../performance_analysis/dataflow_showing.png}
-    \includegraphics[width=0.49\linewidth]{../performance_analysis/runtime_showing.png}
-    \caption{avg dataflow and runtime when requesting for the POI service}
+    \includegraphics[width=0.4\linewidth]{../performance_analysis/dataflow_showing.png}
+    \includegraphics[width=0.4\linewidth]{../performance_analysis/runtime_showing.png}
+    \caption{avg dataflow and runtime for client request}
     \label{fig:showing}
 \end{figure}
 
 \begin{figure}[h!]
-    \includegraphics[width=0.49\linewidth]{../performance_analysis/runtime_verification}
+    \includegraphics[width=0.4\linewidth]{../performance_analysis/runtime_verification}
     \caption{avg runtime for the credential verifications}
     \label{fig:verify}
 \end{figure}
@@ -240,7 +224,7 @@ users.
 
     \begin{figure}[h!]
         \centering
-        \includegraphics[width=0.9\linewidth]{../privacy_evaluation/daily_trajectories/7.210.121.52-matrix.png}
+        \includegraphics[width=0.5\linewidth]{../privacy_evaluation/daily_trajectories/7.210.121.52-matrix.png}
         \caption{Distance Matrix of one user}
         \label{fig:matrix}
     \end{figure}
@@ -358,7 +342,7 @@ metric, we used the \textit{haversine} distance between the predicted points (as
 latitude-longitude pairs), in kilometers.
     \begin{figure}[h!]
         \centering
-        \includegraphics[width=0.9\linewidth]{../privacy_evaluation/adv_error.png}
+        \includegraphics[width=0.5\linewidth]{../privacy_evaluation/adv_error.png}
         \caption{Privacy gain evaluation}
     \end{figure}
 \subsubsection{Utility Loss Evaluation}
@@ -368,7 +352,7 @@ the cell identifier in which the user appeared located, against the parameter
 $p$.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.9\linewidth]{../privacy_evaluation/utility_loss.png}
+    \includegraphics[width=0.5\linewidth]{../privacy_evaluation/utility_loss.png}
     \caption{Utility Loss evaluation}
 \end{figure}
 \subsubsection{Utility-Privacy Trade-off}
