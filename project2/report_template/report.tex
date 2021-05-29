@@ -11,8 +11,8 @@
 
 \pagenumbering{X}
 \title{CS-523 SecretStroll Report}
-\author{Author 1, Author 2}
-\date{April 2020}
+\author{Francesco Intoci, Elvric Trombert}
+\date{Spring Semester 2020-2021}
 
 
 
@@ -171,7 +171,7 @@ terms of runtime, variate in respect to the number of available subscriptions:
 
 \subsection{Privacy Evaluation}
 In this section, we performed a privacy evaluation on the network level of
-SecretStroll application.
+SecretStroll.
 
 
 \subsubsection{Identity Inference Attack}
@@ -202,9 +202,9 @@ users.
     \item \textbf{Feature Extraction}: the first step for performing the attack
     was a simple process of feature extraction. We added 3 new columns to the
     \textit{queries.csv} dataset from the \textit{timestamp} column:
-    \textit{hour} column,
-    \textit{day} column, and \textit{daytime}
-    column(for example, a query launched
+    \textit{hour} column (hour granularity),
+    \textit{day} column (from day $1$ to $20$), and \textit{daytime}
+    column (it represents when the query was made during the day. For example, a query launched
     at 10 a.m was labelled as "Morning").
     \item \textbf{Trajectory Analysis}: the second step was to
     analyze the "quality" of the provided data: generally, when performing
@@ -219,7 +219,7 @@ users.
     meaningful metric, since for each user we could witness a larger distance
     between trajectories collected during week days and trajectories collected
     during weekends (as expected by the different pattern of average people
-    during work days compared to the one during days off).
+    during work days compared to their pattern during days off).
 
 
     \begin{figure}[h!]
@@ -231,10 +231,9 @@ users.
 
 
     \item \textbf{Location clustering}: After validating the data, we proceeded
-    to mount the attack. The attack consisted in a simple analysis on the
-    dataset. We first grouped the daytimes we defined in three groups ("home", "work", "leisure"): for example, the group \textit{daytime home},
+    to mount the attack. We first grouped the daytimes we defined in three groups ("home", "work", "leisure") accordingly to where a user was likely to be in that moment. For example, the group \textit{daytime home},
     was comprehensive of daytimes "Early" and "Night". Then, for
-    each user, for each daytime group,we
+    each user, for each daytime group, we
     extracted latitudes and longitudes of locations. Then, we fed the
     coordinates to the \textbf{DBSCAN} algorithm. After
     the clusters were formed, we filtered out the noise and computed
@@ -248,24 +247,22 @@ users.
 
 \paragraph{Threat Model}
 For this attack, similarly to the previous one, we considered the adversary to
-be the \textbf{service provider}. The adversary is thus again a
-\textbf{passive}, \textbf{global} one, with computational power bounded by
-polynomial time.\newline
+be again the \textbf{service provider}(thus again
+\textbf{passive} and \textbf{global}).
 As far as her background knowledge is concerned, we assumed that the adversary
-knows the identity of a subset of users. Furthermore, we assumed that
-the adversary has access to a channel of side information about users, more
-concretely to users' public profiles on social networks.
-
+knows the identity of a subset of users. With respect to her capabilities, we assumed that
+the adversary has access to a side channel of information about users, more
+concretely to users' public profiles on social networks. Our additional assumption is that all targeted users on the OSN made queries to SecretStroll.
 
 \paragraph{Adversarial Goal}
 The goal of the adversary is to infer the identity of users for which she does
 not know a name-IP address mapping. In order to do so, the adversary looks for
 similarity, on daily basis, on users trajectories, in order to exploit the
-co-location information provided by her source of side information. Suppose that IP address "IP A" belongs to a user for
+co-location information provided by users' OSN profiles. Suppose that IP address "IP A" belongs to a user for
 whom the adversary knows the identity: Alice. After running the attack, the
 adversary knows that, on day 6, Alice's trajectory was very similar to the one
-of user with ip address "IP B". The adversary exploits her background knowledge
-and discovers, visiting Alice public profile, that, on day 6, Alice spent the
+of user with ip address "IP B". The adversary exploits her side channel
+and discovers, visiting Alice profile, that, on day 6, Alice spent the
 day with her friend Bob. The adversary can thus infer with good probability that
 user having "IP B" is Bob.
 
@@ -295,7 +292,7 @@ number of available neighbours will vary between $2$ and $4$).
 The LPPM we designed is aimed to protect users against attacks $1$ and $2$ in
 section \textit{A}, by introducing noise in the localization mechanism used by
 the system. Thus, the adversarial models we took into account are the ones we
-described in the aforementioned attacks. Clearly, the mechanism is ineffective
+described in the first two aforementioned attacks. Clearly, the mechanism is ineffective
 against the adversarial model described in attack $3$.
 \subsubsection{Assumptions}
 When evaluating our mechanism, the following assumptions were made:
@@ -395,7 +392,7 @@ In order to perform the multi-label classification, we trained a \textit{Random 
 \subsection{Discussion and Countermeasures}
 The overall result of the model was very good, scoring an accuracy of $0.926$ with a standard deviation of $0.006$.
 The attack achieved good results even with less traces, scoring around $0.82$ accuracy with $0.02$ standard deviation with just 30 samples per cell.
-This very effective attack represents one of the limitation of Tor system. Nevertheless, it is possible to adopt some countermeasures in order to lower the success rate (i.e accuracy, in this case), of the attack. For example, one technique could be \textit{traffic morphing}. Moverover, in this case, the defense mechanism could be applied server side. Since the classifier we built mainly relies on packets size and timing, \textit{SecretStroll} server could try to uniform data from all the cells, for example adding decoy POIs, in order to pad the response for every grid queried by the user such that they all have the same lenght. Furthermore, it could add some random delay between sending packets (at cost of latency), so to hide the peculiar timing for each cell response.
+This very effective attack represents one of the limitation of Tor system. Nevertheless, it is possible to adopt some countermeasures in order to lower the success rate (i.e accuracy, in this case), of the attack. For example, one technique could be \textit{traffic morphing}. Since the classifier we built mainly relies on packets size and timing, \textit{SecretStroll} server could try to uniform data from all the cells, for example adding decoy POIs, in order to pad the response for every grid queried by the user such that they all have the same lenght. Furthermore, it could add some random delay between sending packets (at cost of latency), so to hide the peculiar timing for each cell response.
 
 
 
