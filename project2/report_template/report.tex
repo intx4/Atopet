@@ -200,10 +200,10 @@ users.
 \paragraph{Implementation Details}
 \begin{itemize}
     \item \textbf{Feature Extraction}: the first step for performing the attack
-    was a simple process of feature extraction. We added 3 new columns to the
+    was a simple process of feature extraction. We added 4 new columns to the
     \textit{queries.csv} dataset from the \textit{timestamp} column:
-    \textit{hour} column (hour granularity),
-    \textit{day} column (from day $1$ to $20$), and \textit{daytime}
+    \textit{cell_id} column, \textit{hour} column (hour granularity),
+    \textit{day} column (from day $1$ to $20$) and \textit{daytime}
     column (it represents when the query was made during the day. For example, a query launched
     at 10 a.m was labelled as "Morning").
     \item \textbf{Trajectory Analysis}: the second step was to
@@ -244,7 +244,8 @@ users.
 
 \subsubsection{De-anonimization of trajectories trough Co-Location}
 
-
+\paragraph{Reference}
+The idea for the attack was taken by reading https://ieeexplore.ieee.org/document/8228621.
 \paragraph{Threat Model}
 For this attack, similarly to the previous one, we considered the adversary to
 be again the \textbf{service provider}(thus again

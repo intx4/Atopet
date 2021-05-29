@@ -1,3 +1,0 @@
-Honest but curious server adversaries (direct location), POI near location, POI asked by user.
-Active adversaries in a grid, for the service to run we are going to assume that each grid has an antenna
-and we can stimulate what a man in the middle would see.
