@@ -255,6 +255,37 @@ concretely to users' public profiles on social networks. Our additional assumpti
 \paragraph{Adversarial Goal}
 The goal of the adversary is to derive a pseudo-anonymised social graph of users, where nodes are users' IP addresses and the edges represent a similarity between users' trajectory on a specific day. Furthermore, if the adversary overlays the social graph she derived with the side information she can access from OSN, she can effectively de-anonymise the social graph (or at least part of it), exploiting co-location information. For example, if the adversary learns that user with IP "A" (Alice, who the adversary knows) and user with IP "B" had a similar trajectory on day 6, and on the same day Alice posted pictures and posts tagging her friend Bob, the adversary can identify user "B" as Bob with good probability.
 
+\subsubsection{User Interest inference via POI}
+\paragraph{Thread Model}
+For this attack, we considered Secret-Stroll service provider as a passive adversary (i.e Honest but
+Curious). The adversary is able to read all the queries made from users in SecretStroll grid: the adversarial view
+is represented by queries.csv dataset.
+
+\paragraph{Adversarial Goal}
+Here the goal of the adversary is to find the interest of its users based on the number of time a specific
+type of POI was requested by a user over the week-days and the week-end independently. This in order to find out
+the interest of its users and potentially cross reference it with public data such as Facebook profile pages
+to deanonmyize the users.
+
+\paragraph{Implementation Details}
+In order to do so, entries were split into weekdays and weekends.
+Then group by IP addresses, then the number of each POI request were counted.
+The information about each POI request count per user can be found in the \textit{users\_poi\_counts\_weekdays.csv}
+and \textit{users\_poi\_counts\_weekends.csv} files.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.4\linewidth]{user_poi_weekdays.png}
+    \includegraphics[width=0.4\linewidth]{user_poi_weekends.png}
+    \caption{Point of Interest of two different users over the weekend and the regular weekdays}
+    \label{fig:pois}
+\end{figure}
+
+This figure shows the potential inference that the adversary could make on two different users based on their POI
+requests.
+For instance we can see that both users although at different time of the week tend to search for clubs.
+With user \texttt{10.229.150.53} also having a string interest in gyms and dojos.
+
 \subsection{Defences}
 In order to protect users privacy against the attacks we described in section
 \textit{A}, we designed the following \textit{Location Privacy Preserving
