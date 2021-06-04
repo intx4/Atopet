@@ -380,7 +380,7 @@ the lecture notes, as well as in literature \cite{web_fingerprinting}:
 \subsection{Evaluation}
 In order to perform the multi-label classification, we trained a \textit{Random Forest Classifier} provided by the \texttt{sklearn} library.
 In order to evaluate the performance of the classifier, we used the Exact Match Ratio metric.
-As validation method, we used a 10-fold stratified cross validation, and repeated the evaluation 5 times.
+As validation method, we used a 10-fold stratified cross validation, and repeated the evaluation 5 times, each time using  different randomness for the splits.
 
 \subsection{Discussion and Countermeasures}
 The overall result of the model was very good, scoring an accuracy of $0.926$ with a standard deviation of $0.006$.
