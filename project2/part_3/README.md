@@ -36,14 +36,16 @@ Is a jupyter script responsible for extracting features out of the filtered capt
 
 1. run `docker-compose build`
 2. `docker-compose up -d`
-3. `chmod -R 777 ./finger_printing`
-4. `docker-compose exec server bash`
-5. `cd server && python3 server.py run`
-6. Then open a new terminal and in the same directory run `docker-compose exec client bash`
-7. run `cd client && ./generate_traces.sh`
-8. Once completed run `./repair_failed_runs.sh`
-9. `cd finger_printing`
-10. `./filter.sh`
-11. Open `feature_extractions.ipynb` and run all cells
-12. `cd ../`
-13. `python3 fingerprinting.py` dump the results in `classifier_score.txt`.
+3. Create the directories `filtered` and `raw` in `finger_printing` directory
+4. go to finger_printing directory and run `seq 1 100 | xargs -I @ ./raw/cell_@` and `seq 1 100 | xargs -I @ ./filtered/cell_@`
+5. `chmod -R 777 ./finger_printing`
+6. `docker-compose exec server bash`
+7. `cd server && python3 server.py run`
+8. Then open a new terminal and in the same directory run `docker-compose exec client bash`
+9. run `cd client && ./generate_traces.sh`
+10. Once completed run `./repair_failed_runs.sh`
+11. `cd finger_printing`
+12. `./filter.sh`
+13. Open `feature_extractions.ipynb` and run all cells
+14. `cd ../`
+15. `python3 fingerprinting.py` dump the results in `classifier_score.txt`.
