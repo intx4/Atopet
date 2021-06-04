@@ -244,27 +244,15 @@ combining with her background knowledge, the adversary can link users' IP addres
 The attack was inspired by \cite{8228621}.
 \paragraph{Threat Model}
 For this attack, similarly to the previous one, we considered the adversary to
-be again the \textbf{service provider}(thus again
+be again the \textbf{service provider} (again
 \textbf{passive}).
 As far as her background knowledge is concerned, we assumed that the adversary
-knows the identity of a subset of users, i.e knows a mapping between users' IP and their identity (we assumed this to be a reasonable assumption, either because the adversary run the previous attack identifying a subset of users or she colluded with the ISP gaining such information). Furthermore, we assumed that
+knows the identity of a subset of users, i.e knows a mapping between users' IP and their identity (we believe that this is a reasonable assumption, either because the adversary run the previous attack identifying a subset of users or she colluded with the ISP gaining such information). Furthermore, we assumed that
 the adversary has access to a side channel of information about users, more
-concretely to users' public profiles on social networks. Our additional assumption is that all targeted users have a social network account.
+concretely to users' public profiles on social networks. Our additional assumption is that all targeted users have a social network account, and that all co-location information (e.g tagging in a post) corresponds to people being physically together (i.e no fictitious tagging).
 
 \paragraph{Adversarial Goal}
-The goal of the adversary is to derive a pseudo-anonymised social graph of users, where nodes are users' IP addresses and the edges represent a similarity between users' trajectory on a specific day. Furthermore, if the adversary overlays the social graph she derived with the side information she can access from OSN, she can effectively de-anonymise the social graph (or at least part of it), exploiting co-location information.
-
-\paragraph{Implementation Details}
-We adopted an approach very similar to step 2 of the previous attack. For each
-day, we collected each user trajectory. For users whose trajectories were made
-up of fewer points than the longest trajectory of the day, the last known
-position was used as padding. We then computed the distance matrix between
-trajectories, using again \textit{Frechet Distance}. Finally, we used
-\textbf{DSBSCAN} algorithm in order to find clusters within the trajectories. We
-reported, for each day where a cluster of size greater than one was found, the
-users whose trajectories belonged to the same cluster, and the day. The results
-are provided in the \texttt{users\_trajectories\_similarities.csv} file.
-
+The goal of the adversary is to derive a pseudo-anonymised social graph of users, where nodes are users' IP addresses and the edges represent a similarity between users' trajectory on a specific day. Furthermore, if the adversary overlays the social graph she derived with the side information she can access from OSN, she can effectively de-anonymise the social graph (or at least part of it), exploiting co-location information. For example, if the adversary learns that user with IP "A" (Alice, who the adversary knows) and user with IP "B" had a similar trajectory on day 6, and on the same day Alice posted pictures and posts tagging her friend Bob, the adversary can identify user "B" as Bob with good probability.
 
 \subsection{Defences}
 In order to protect users privacy against the attacks we described in section
