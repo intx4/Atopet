@@ -216,7 +216,7 @@ combining with her background knowledge, the adversary can link users' IP addres
 
     \begin{figure}[h!]
         \centering
-        \includegraphics[width=0.9\linewidth]{../privacy_evaluation/daily_trajectories/7.210.121.52-matrix.png}
+        \includegraphics[width=0.7\linewidth]{../privacy_evaluation/daily_trajectories/7.210.121.52-matrix.png}
         \caption{Distance Matrix of user 7.210.121.52}
         \label{fig:matrix}
     \end{figure}
@@ -274,8 +274,7 @@ Such information could be used by the adversary to mount a \textit{Location Infe
 day by cross-referencing the POI type information with the user top locations (e.g if a users mostly queries "restaraunt" during the morning, it will probably be at a restaurant near his work place).
 
 \paragraph{Implementation Details}
-In order to do so, entries were split into weekdays and weekends.
-Then group by IP addresses, then the number of each POI request by daytime was counted.
+In order to do so, entries were split into weekdays and weekends, then grouped by IP addresses, then the number of each POI request by daytime was counted and the most frequent POI per daytime extracted.
 The information about each POI request count per user can be found in the \textit{users\_poi\_counts\_weekdays.csv}
 and \textit{users\_poi\_counts\_weekends.csv} files.
 
