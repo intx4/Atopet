@@ -1,0 +1,25 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{Attribute-based credential}{section.1}% 2
+\BOOKMARK [2][-]{subsection.1.2}{\(De\)Anonymization of User Trajectories}{section.1}% 3
+\BOOKMARK [2][-]{subsection.1.3}{Fingerprinting attack on Tor}{section.1}% 4
+\BOOKMARK [1][-]{section.2}{Attribute-based credential}{}% 5
+\BOOKMARK [2][-]{subsection.2.1}{Test}{section.2}% 6
+\BOOKMARK [2][-]{subsection.2.2}{Evaluation}{section.2}% 7
+\BOOKMARK [1][-]{section.3}{\(De\)Anonymization of User Trajectories}{}% 8
+\BOOKMARK [2][-]{subsection.3.1}{Privacy Evaluation}{section.3}% 9
+\BOOKMARK [3][-]{subsubsection.3.1.1}{Identity Inference Attack}{subsection.3.1}% 10
+\BOOKMARK [3][-]{subsubsection.3.1.2}{De-anonimization of trajectories trough Co-Location}{subsection.3.1}% 11
+\BOOKMARK [3][-]{subsubsection.3.1.3}{User Interest inference via POI}{subsection.3.1}% 12
+\BOOKMARK [2][-]{subsection.3.2}{Defences}{section.3}% 13
+\BOOKMARK [3][-]{subsubsection.3.2.1}{Adversarial Models}{subsection.3.2}% 14
+\BOOKMARK [3][-]{subsubsection.3.2.2}{Assumptions}{subsection.3.2}% 15
+\BOOKMARK [3][-]{subsubsection.3.2.3}{Privacy Gain Evaluation}{subsection.3.2}% 16
+\BOOKMARK [3][-]{subsubsection.3.2.4}{Utility Loss Evaluation}{subsection.3.2}% 17
+\BOOKMARK [3][-]{subsubsection.3.2.5}{Utility-Privacy Trade-off}{subsection.3.2}% 18
+\BOOKMARK [1][-]{section.4}{Cell Fingerprinting via Network Traffic Analysis}{}% 19
+\BOOKMARK [2][-]{subsection.4.1}{Implementation details}{section.4}% 20
+\BOOKMARK [3][-]{subsubsection.4.1.1}{Trace collection}{subsection.4.1}% 21
+\BOOKMARK [3][-]{subsubsection.4.1.2}{Filtering}{subsection.4.1}% 22
+\BOOKMARK [3][-]{subsubsection.4.1.3}{Feature Extraction}{subsection.4.1}% 23
+\BOOKMARK [2][-]{subsection.4.2}{Evaluation}{section.4}% 24
+\BOOKMARK [2][-]{subsection.4.3}{Discussion and Countermeasures}{section.4}% 25
