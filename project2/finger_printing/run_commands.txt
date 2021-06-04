@@ -1,109 +1,19 @@
  python3 client.py grid @ -T restaurant -t
  python3 client.py grid @ -T bar -t
  python3 client.py grid @ -T dojo -t
- python3 client.py grid @ -T restaurant -T bar -t
- python3 client.py grid @ -T restaurant -T dojo -t
- python3 client.py grid @ -T bar -T dojo -t
- python3 client.py grid @ -T restaurant -T bar -T dojo -t
  python3 client.py grid @ -T cloth -t
  python3 client.py grid @ -T parks -t
+ python3 client.py grid @ -T restaurant -T bar -t
+ python3 client.py grid @ -T restaurant -T dojo -t
  python3 client.py grid @ -T restaurant -T cloth -t
  python3 client.py grid @ -T restaurant -T parks -t
+ python3 client.py grid @ -T bar -T dojo -t
  python3 client.py grid @ -T bar -T cloth -t
  python3 client.py grid @ -T bar -T parks -t
  python3 client.py grid @ -T dojo -T cloth -t
  python3 client.py grid @ -T dojo -T parks -t
  python3 client.py grid @ -T cloth -T parks -t
- python3 client.py grid @ -T restaurant -T bar -T cloth -t
- python3 client.py grid @ -T restaurant -T bar -T parks -t
- python3 client.py grid @ -T restaurant -T dojo -T cloth -t
- python3 client.py grid @ -T restaurant -T dojo -T parks -t
- python3 client.py grid @ -T restaurant -T cloth -T parks -t
- python3 client.py grid @ -T bar -T dojo -T cloth -t
- python3 client.py grid @ -T bar -T dojo -T parks -t
- python3 client.py grid @ -T bar -T cloth -T parks -t
- python3 client.py grid @ -T dojo -T cloth -T parks -t
- python3 client.py grid @ -T restaurant -T bar -T dojo -T cloth -t
- python3 client.py grid @ -T restaurant -T bar -T dojo -T parks -t
- python3 client.py grid @ -T restaurant -T bar -T cloth -T parks -t
- python3 client.py grid @ -T restaurant -T dojo -T cloth -T parks -t
- python3 client.py grid @ -T bar -T dojo -T cloth -T parks -t
- python3 client.py grid @ -T restaurant -t
- python3 client.py grid @ -T bar -t
- python3 client.py grid @ -T dojo -t
- python3 client.py grid @ -T restaurant -T bar -t
- python3 client.py grid @ -T restaurant -T dojo -t
- python3 client.py grid @ -T bar -T dojo -t
  python3 client.py grid @ -T restaurant -T bar -T dojo -t
- python3 client.py grid @ -T cloth -t
- python3 client.py grid @ -T parks -t
- python3 client.py grid @ -T restaurant -T cloth -t
- python3 client.py grid @ -T restaurant -T parks -t
- python3 client.py grid @ -T bar -T cloth -t
- python3 client.py grid @ -T bar -T parks -t
- python3 client.py grid @ -T dojo -T cloth -t
- python3 client.py grid @ -T dojo -T parks -t
- python3 client.py grid @ -T cloth -T parks -t
- python3 client.py grid @ -T restaurant -T bar -T cloth -t
- python3 client.py grid @ -T restaurant -T bar -T parks -t
- python3 client.py grid @ -T restaurant -T dojo -T cloth -t
- python3 client.py grid @ -T restaurant -T dojo -T parks -t
- python3 client.py grid @ -T restaurant -T cloth -T parks -t
- python3 client.py grid @ -T bar -T dojo -T cloth -t
- python3 client.py grid @ -T bar -T dojo -T parks -t
- python3 client.py grid @ -T bar -T cloth -T parks -t
- python3 client.py grid @ -T dojo -T cloth -T parks -t
- python3 client.py grid @ -T restaurant -T bar -T dojo -T cloth -t
- python3 client.py grid @ -T restaurant -T bar -T dojo -T parks -t
- python3 client.py grid @ -T restaurant -T bar -T cloth -T parks -t
- python3 client.py grid @ -T restaurant -T dojo -T cloth -T parks -t
- python3 client.py grid @ -T bar -T dojo -T cloth -T parks -t
- python3 client.py grid @ -T restaurant -t
- python3 client.py grid @ -T bar -t
- python3 client.py grid @ -T dojo -t
- python3 client.py grid @ -T restaurant -T bar -t
- python3 client.py grid @ -T restaurant -T dojo -t
- python3 client.py grid @ -T bar -T dojo -t
- python3 client.py grid @ -T restaurant -T bar -T dojo -t
- python3 client.py grid @ -T cloth -t
- python3 client.py grid @ -T parks -t
- python3 client.py grid @ -T restaurant -T cloth -t
- python3 client.py grid @ -T restaurant -T parks -t
- python3 client.py grid @ -T bar -T cloth -t
- python3 client.py grid @ -T bar -T parks -t
- python3 client.py grid @ -T dojo -T cloth -t
- python3 client.py grid @ -T dojo -T parks -t
- python3 client.py grid @ -T cloth -T parks -t
- python3 client.py grid @ -T restaurant -T bar -T cloth -t
- python3 client.py grid @ -T restaurant -T bar -T parks -t
- python3 client.py grid @ -T restaurant -T dojo -T cloth -t
- python3 client.py grid @ -T restaurant -T dojo -T parks -t
- python3 client.py grid @ -T restaurant -T cloth -T parks -t
- python3 client.py grid @ -T bar -T dojo -T cloth -t
- python3 client.py grid @ -T bar -T dojo -T parks -t
- python3 client.py grid @ -T bar -T cloth -T parks -t
- python3 client.py grid @ -T dojo -T cloth -T parks -t
- python3 client.py grid @ -T restaurant -T bar -T dojo -T cloth -t
- python3 client.py grid @ -T restaurant -T bar -T dojo -T parks -t
- python3 client.py grid @ -T restaurant -T bar -T cloth -T parks -t
- python3 client.py grid @ -T restaurant -T dojo -T cloth -T parks -t
- python3 client.py grid @ -T bar -T dojo -T cloth -T parks -t
- python3 client.py grid @ -T restaurant -t
- python3 client.py grid @ -T bar -t
- python3 client.py grid @ -T dojo -t
- python3 client.py grid @ -T restaurant -T bar -t
- python3 client.py grid @ -T restaurant -T dojo -t
- python3 client.py grid @ -T bar -T dojo -t
- python3 client.py grid @ -T restaurant -T bar -T dojo -t
- python3 client.py grid @ -T cloth -t
- python3 client.py grid @ -T parks -t
- python3 client.py grid @ -T restaurant -T cloth -t
- python3 client.py grid @ -T restaurant -T parks -t
- python3 client.py grid @ -T bar -T cloth -t
- python3 client.py grid @ -T bar -T parks -t
- python3 client.py grid @ -T dojo -T cloth -t
- python3 client.py grid @ -T dojo -T parks -t
- python3 client.py grid @ -T cloth -T parks -t
  python3 client.py grid @ -T restaurant -T bar -T cloth -t
  python3 client.py grid @ -T restaurant -T bar -T parks -t
  python3 client.py grid @ -T restaurant -T dojo -T cloth -t
