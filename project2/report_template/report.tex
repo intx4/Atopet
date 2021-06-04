@@ -216,7 +216,7 @@ combining with her background knowledge, the adversary can link users' IP addres
 
     \begin{figure}[h!]
         \centering
-        \includegraphics[width=0.7\linewidth]{../privacy_evaluation/daily_trajectories/7.210.121.52-matrix.png}
+        \includegraphics[width=0.6\linewidth]{../privacy_evaluation/daily_trajectories/7.210.121.52-matrix.png}
         \caption{Distance Matrix of user 7.210.121.52}
         \label{fig:matrix}
     \end{figure}
@@ -248,7 +248,7 @@ the adversary has access to a side channel of information about users, more
 concretely to users' public profiles on social networks. Our additional assumption is that all targeted users have a social network account, and that all co-location information (e.g tagging in a post) corresponds to people being physically together (i.e no fictitious tagging).
 
 \paragraph{Adversarial Goal}
-The goal of the adversary is to derive a pseudo-anonymised social graph of users, where nodes are users' IP addresses and the edges represent a similarity between users' trajectory on a specific day. Furthermore, if the adversary overlays the social graph she derived with the side information she can access from OSN, she can effectively de-anonymise the social graph (or at least part of it), exploiting co-location information. For example, if the adversary learns that user with IP "A" (Alice, who the adversary knows) and user with IP "B" had a similar trajectory on day 6, and on the same day Alice posted pictures and posts tagging her friend Bob, the adversary can identify user "B" as Bob with good probability.
+The goal of the adversary is to derive a pseudo-anonymized social graph of users, where nodes are users' IP addresses and the edges represent a similarity between users' trajectory on a specific day. Furthermore, if the adversary overlays the social graph she derived with the side information she can access from OSN, she can effectively de-anonymize the social graph (or at least part of it), exploiting co-location information. For example, if the adversary learns that user with IP "A" (Alice, who the adversary knows) and user with IP "B" had a similar trajectory on day 6, and on the same day Alice posted pictures and posts tagging her friend Bob, the adversary can identify user "B" as Bob with good probability.
 
 \paragraph{Implementation Details}
 We adopted an approach very similar to step 2 of the previous attack. For each
@@ -272,7 +272,12 @@ Here the goal of the adversary is to find the interest of its users based on how
 type of POI was requested by a user over the week-days and the week-end, based on the time of the day (Early, Morning, Afternoon, Evening and Nights).
 Such information could be used by the adversary to mount a \textit{Location Inference Attack},i,e infer  users' most likely location in terms of POI locations at a given time of the
 day by cross-referencing the POI type information with the user top locations (e.g if a users mostly queries "restaraunt" during the morning, it will probably be at a restaurant near his work place).
-
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{10.229.150.53_pois.png}
+    \caption{POIs queried by user 10.229.150.53 during weekdays}
+    \label{fig:my_label}
+\end{figure}
 \paragraph{Implementation Details}
 In order to do so, entries were split into weekdays and weekends, then grouped by IP addresses, then the number of each POI request by daytime was counted and the most frequent POI per daytime extracted.
 The information about each POI request count per user can be found in the \textit{users\_poi\_counts\_weekdays.csv}
