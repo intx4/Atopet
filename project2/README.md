@@ -1,6 +1,7 @@
-# Part 1 and 2
-This folder contains code for part 1 and part 2 of the project.
+# Structure
+This folder contains code for part 1 ,part 2 and part 3 of the project.
 Part 2 code is entirely located in the `privacy_evaluation` folder.
+Part 3 is entirely located in the `part_3` folder
 
 ## Part 1
 
@@ -20,4 +21,4 @@ This part is entirely contained in the `privacy_evaluation` folder.
 Please check the README.md file in it for more details.
 
 ## Part 3
-Is in the folder titled `part_3`
+Check `part_3` folder.
