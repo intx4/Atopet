@@ -271,17 +271,24 @@ home and work locations (gained after running attack $1$).
 Here the goal of the adversary is to find the interest of its users based on how many times a specific
 type of POI was requested by a user over the week-days and the week-end, based on the time of the day (Early, Morning, Afternoon, Evening and Nights).
 Such information could be used by the adversary to mount a \textit{Location Inference Attack},i,e infer  users' most likely location in terms of POI locations at a given time of the
+day by cross-referencing the POI type information with the user top locations (e.g if a users mostly queries "restarant" during the morning, it will probably be at a restaurant near his work place).
+
 day by cross-referencing the POI type information with the user top locations (e.g if a users mostly queries "restaraunt" during the morning, it will probably be at a restaurant near his work place).
-\begin{figure}
-    \centering
-    \includegraphics[width=0.6\linewidth]{10.229.150.53_pois.png}
-    \caption{POIs queried by user 10.229.150.53 during weekdays}
-    \label{fig:my_label}
-\end{figure}
+
 \paragraph{Implementation Details}
 In order to do so, entries were split into weekdays and weekends, then grouped by IP addresses, then the number of each POI request by daytime was counted and the most frequent POI per daytime extracted.
 The information about each POI request count per user can be found in the \textit{users\_poi\_counts\_weekdays.csv}
 and \textit{users\_poi\_counts\_weekends.csv} files.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.8\linewidth]{10.229.150.53_pois.png}
+	\caption{Most common POIs queried for user 10.229.150.53 during weekdays}
+	\label{fig:my_label}
+\end{figure}
+
+The figure above shows that during a week day in the afternoon for example user $10.229.150.53$
+is most likely at a restaurant.
 
 \subsection{Defences}
 In order to protect users privacy against the attacks we described in section

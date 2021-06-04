@@ -18,3 +18,6 @@ and the scripts that generated them.
 ## Part 2
 This part is entirely contained in the `privacy_evaluation` folder.
 Please check the README.md file in it for more details.
+
+## Part 3
+Is in the folder titled `part_3`
