@@ -178,33 +178,30 @@ SecretStroll.
 
 
 \paragraph{Threat Model}
-For this attack, we considered a \textbf{passive} adversary (i.e \textit{Honest
-but Curious}). We modelled the adversary as \textbf{global} (i.e she has a full
-view of the network used by the system, meaning that she can eavesdrop queries
-made from whichever cell in SecretStroll grid. The adversarial view is
-represented by \texttt{queries.csv} dataset). More specifically, the adversary
-in this setting is SecretStroll \textbf{service provider}.\newline
+For this attack, we considered SecretStroll service provider as a \textbf{passive} adversary (i.e \textit{Honest
+but Curious}). The adversary is able to read all the queries made from users in SecretStroll grid: the adversarial view is
+represented by \texttt{queries.csv} dataset.
 We assumed the following background knowledge for the adversary: the adversary
-knows a mapping between users' IP addresses and their name and surname.\newline
+knows a mapping between users' POIs and top locations (e.g home, work) and their identity.\newline
 We assumed the adversary computational power to be bounded by Polynomial time.
 
 
 \paragraph{Adversarial Goal}
 The goal of the adversary is to infer users' \textbf{top-3 locations}, namely
-their home location, their workplace location, and lastly the place where they shop. By knowing such sensible information and
-combining with her background knowledge, the adversary can uniquely identify
-users.
+their home location, their workplace location, and any particular place where
+they spend their leisure time. By knowing such sensible information and
+combining with her background knowledge, the adversary can link users' IP addresses with their identity.
 
 
 \paragraph{Implementation Details}
 \begin{itemize}
     \item \textbf{Feature Extraction}: the first step for performing the attack
-    was a simple process of feature extraction. We added 4 new columns to the
-    \textit{queries.csv} dataset from the \textit{timestamp} column:
-    \textit{cell\_id} column, \textit{hour} column (hour granularity),
-    \textit{day} column (from day $1$ to $20$) and \textit{daytime}
-    column (it represents when the query was made during the day. For example, a query launched
+    was a simple process of feature extraction on     \textit{queries.csv} dataset. We extracted 4 new features from \textit{timestamp} column:
+    \textit{cell\_id} (cell id. of user location in the query), \textit{hour} (hour of the query),
+    \textit{day} (day of the query, from day 1 to 20) and \textit{daytime}
+    (it represents when the query was made during the day. For example, a query launched
     at 10 a.m was labelled as "Morning").
+
     \item \textbf{Trajectory Analysis}: the second step was to
     analyze the "quality" of the provided data: generally, when performing
     inference on users home or workplace location, the common assumption is that
@@ -217,7 +214,7 @@ users.
     Furthermore we could assess that \textit{Frechet Distance} represented a
     meaningful metric, since for each user we could witness a larger distance
     between trajectories collected during week days and trajectories collected
-    during weekends (as expected by the different pattern of average people
+    during weekends (as expected by the different mobility patterns of average people
     during work days compared to their pattern during days off).
 
 
@@ -231,7 +228,7 @@ users.
 
     \item \textbf{Location clustering}: After validating the data, we proceeded
     to mount the attack. We first grouped the daytimes we defined in three groups ("home", "work", "leisure") accordingly to where a user was likely to be in that moment. For example, the group \textit{daytime home},
-    was comprehensive of daytimes "Early" and "Night". Then, for
+    was comprehensive of daytimes "Early" and "Night", since in those moments of the day users are likely to be at their homes. Then, for
     each user, for each daytime group, we
     extracted latitudes and longitudes of locations. Then, we fed the
     coordinates to the \textbf{DBSCAN} algorithm. After
@@ -244,27 +241,18 @@ users.
 \subsubsection{De-anonimization of trajectories trough Co-Location}
 
 \paragraph{Reference}
-The idea for the attack was taken by reading https://ieeexplore.ieee.org/document/8228621.
+The attack was inspired by \cite{8228621}.
 \paragraph{Threat Model}
 For this attack, similarly to the previous one, we considered the adversary to
 be again the \textbf{service provider}(thus again
-\textbf{passive} and \textbf{global}).
+\textbf{passive}).
 As far as her background knowledge is concerned, we assumed that the adversary
-knows the identity of a subset of users. With respect to her capabilities, we assumed that
+knows the identity of a subset of users, i.e knows a mapping between users' IP and their identity (we assumed this to be a reasonable assumption, either because the adversary run the previous attack identifying a subset of users or she colluded with the ISP gaining such information). Furthermore, we assumed that
 the adversary has access to a side channel of information about users, more
-concretely to users' public profiles on social networks. Our additional assumption is that all targeted users on the OSN made queries to SecretStroll.
+concretely to users' public profiles on social networks. Our additional assumption is that all targeted users have a social network account.
 
 \paragraph{Adversarial Goal}
-The goal of the adversary is to infer the identity of users for which she does
-not know a name-IP address mapping. In order to do so, the adversary looks for
-similarity, on daily basis, on users trajectories, in order to exploit the
-co-location information provided by users' OSN profiles. Suppose that IP address "IP A" belongs to a user for
-whom the adversary knows the identity: Alice. After running the attack, the
-adversary knows that, on day 6, Alice's trajectory was very similar to the one
-of user with ip address "IP B". The adversary exploits her side channel
-and discovers, visiting Alice profile, that, on day 6, Alice spent the
-day with her friend Bob. The adversary can thus infer with good probability that
-user having "IP B" is Bob.
+The goal of the adversary is to derive a pseudo-anonymised social graph of users, where nodes are users' IP addresses and the edges represent a similarity between users' trajectory on a specific day. Furthermore, if the adversary overlays the social graph she derived with the side information she can access from OSN, she can effectively de-anonymise the social graph (or at least part of it), exploiting co-location information.
 
 \paragraph{Implementation Details}
 We adopted an approach very similar to step 2 of the previous attack. For each
