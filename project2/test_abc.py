@@ -1,4 +1,3 @@
-import jsonpickle
 import pytest
 from stroll import *
 from credential import gen_rand_point
