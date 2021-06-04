@@ -15,12 +15,6 @@
 \date{Spring Semester 2020-2021}
 
 
-
-\addtolength{\oddsidemargin}{-.21in}
-\addtolength{\textwidth}{0.25in}
-\addtolength{\topmargin}{-.15in}
-\addtolength{\textheight}{.15in}
-
 \begin{document}
 
 
@@ -270,16 +264,14 @@ are provided in the \texttt{users\_trajectories\_similarities.csv} file, reporti
 \subsubsection{User Interest inference via POI}
 \paragraph{Thread Model}
 For this attack, we considered once again SecretStroll service provider as a passive adversary (i.e Honest but
-Curious). The adversary is able to read all the queries made from users in SecretStroll grid: the adversarial view
-is represented by queries.csv dataset. Here we will also assume that the adversary will have knowledge of users
-most common locations of each users as described in attack $1$.
+Curious).In addition, we also assumed that the adversary has knowledge of users'
+home and work locations (gained after running attack $1$).
 
 \paragraph{Adversarial Goal}
-Here the goal of the adversary is to find the interest of its users based on the number of time a specific
-type of POI was requested by a user over the week-days and the week-end independently based on the time of the day
-being: Early, Morning, Afternoon, Evening and Nights.
-The goal of the adversary is to infer the users interests and thus their most likely location in terms of POI locations at a given time of the
-day.
+Here the goal of the adversary is to find the interest of its users based on how many times a specific
+type of POI was requested by a user over the week-days and the week-end, based on the time of the day (Early, Morning, Afternoon, Evening and Nights).
+Such information could be used by the adversary to mount a \textit{Location Inference Attack},i,e infer  users' most likely location in terms of POI locations at a given time of the
+day by cross-referencing the POI type information with the user top locations (e.g if a users mostly queries "restaraunt" during the morning, it will probably be at a restaurant near his work place).
 
 \paragraph{Implementation Details}
 In order to do so, entries were split into weekdays and weekends.
