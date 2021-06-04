@@ -34,44 +34,46 @@
 \section{Introduction}
 SecretStroll is a Location Based System (LBS), which aims to provide users with
 information about Points of Interest (POI) near their location, satisfying
-user-specified criteria.\newline
-LBS are prone to be privacy-sensitive system: if not implemented following a
-\textit{Privacy by Design} paradigm, they can leak many information about users,
-such as their location and movement patterns, which can lead to more
-privacy-disruptive attacks. For this reason, we designed SecretStroll
-by identifying layers at which the system could potentially leak information and
-implementing privacy-preserving mechanism to try mitigating such leaks. We also conducted a privacy evaluation of the system.\newline
+user-specified criteria.
+
+LBS are prone to be privacy-sensitive systems.
+If not implemented following a \textit{Privacy by Design} paradigm, they can leak many user information including
+but not limited to: user location, user movement patterns and user centre of interests.
+The SecretStroll system was designed by identifying layers at which the system could potentially leak information and
+implementing privacy-preserving mechanism to try mitigating such leaks.
+We also conducted a privacy evaluation of the system.
+
 \subsection{Attribute-based credential}
-SecretStroll exploits an Attribute-based credential Protocol to authorize users
-to fetch POIs of a given type, for which they must have subscribed to. The ABC protocol serves to purposes:
-first, it allows the server to check whether a user request is valid, w.r.t the payment status of the
-user for that service. Secondly, it guarantees anonymity to the users, since the server will not be able
-to link a credential to a user after subsequent requests.
+SecretStroll uses an Attribute-based credential protocol to authorize users
+to fetch POIs of a given type, for which they must have subscribed to.
+The ABC protocol serves two purposes.
+First, it allows the server to check whether a user request is valid, w.r.t the payment status of the user for that service.
+Secondly, it guarantees user anonymity since the server will not be able to link a credential to a user between subsequent requests.
+
 \subsection{(De)Anonymization of User Trajectories}
-ABC alone are not enough in order to guarantee users privacy. In particular, if the server is
-able to observe users metadata, such as their IP Address, the ABC scheme clearly looses its
-\textit{unlinkability} property. We analyzed the consequences on users' privacy of attacks
-mounted by an adversary with access to such metadata, and we evaluated a defence mechanism aimed to mitigate
-such attacks.
+ABC alone are not enough in order to guarantee users privacy.
+In particular, if the server is able to observe users metadata, such as their IP Address, the ABC scheme clearly looses its
+\textit{unlinkability} property.
+We analyzed the consequences of IP address linkage on users' privacy via attacks mounted by an adversary with access to such metadata.
+We then constructed and evaluated a defence mechanism aimed to mitigate such attack.
+
 \subsection{Fingerprinting attack on Tor}
-SecretStroll exploits the Tor Network in order not to leak metadata at Network level. Nevertheless, we
-evaluated the privacy offered by this solution. In particular, supposing that an adversary was able to
-sniff the traffic between a client and the entry guard of Tor network, we mounted a \textit{web fingerprinting}
-attack to try inferring the grid location of the user querying the service.
+SecretStroll exploits the Tor Network in order not to leak metadata at Network level.
+Nevertheless, we evaluated the privacy offered by this solution.
+In particular, supposing that an adversary was able to sniff the traffic between a client and the entry guard of Tor network.
+We mounted a \textit{web fingerprinting} attack that tries to infer in which cell, the user querying the service is located on.
 \section{Attribute-based credential}
 For the implementation of the authorization through \textit{Attribute-based
 credentials}, we have carefully followed the protocol described by
 \textit{Pointcheval and Sanders} \cite{PS_signature}. Nevertheless, during the
-development of the \textit{ABC} system, some design challenges needed to be
-solve, and it is worth highlighting their solution:
+development of the \textit{ABC} system, some design challenges needed to be solved:
 \begin{itemize}
     \item \textbf{Server-Client agreement on the attribute domain}: as described
-    in \cite{PS_signature}, before even starting the protocol, server and client
-    must agree on the public parameters, including the number $L$ of possible
-    attributes. Moreover, users should choose attributes (subscriptions) which
-    are recognized by the server. To this end, we decided to embed the list of
-    available subscriptions in the server public key. The 'attribute domain' is thus formed by the
-    $L-2$ possible subscriptions, followed by the username and a client secret key.
+    in \cite{PS_signature}, before starting the protocol, server and client
+    must agree on the public parameters, which includes number of potential attributes $L$.
+    Moreover, users should choose attributes (subscriptions) which are recognized by the server.
+    To this end, we decided to embed the list of available subscriptions in the server public key.
+    The 'attribute domain' is thus formed by the $L-2$ possible subscriptions, followed by the username, and a client secret key.
     Clients are expected to choose their subscriptions from the provided set:
     failing to comply with the protocol on client side will result in the
     abortion by the server.
@@ -84,14 +86,14 @@ solve, and it is worth highlighting their solution:
     \texttt{SUBSCRIBED\_NO}. The 'username' attribute is encoded through
     \texttt{int.from\_bytes(username.encode(), 'big')}. Client secret key is a random number in $Z_p$.
     \item \textbf{Fiat-Shamir Heuristic for Issuance Request}: Clients choose their \textit{user-defined} attributes,
-    which in our implementation are the secret key and username, together with a
-    blinding factor $t$. Note that the random blinding factor guarantees
-    \textit{issuer unlinkability}. User commitment $C$ will thus be
-    $g^{t}*Y_{L}^{client\_sk}$. Client will also produce a \textit{NIZKP} of his commitment. In order
-    to generate the challenge in a non interactive way, we applied
+    which in our implementation are: the secret key and username, together with a
+    blinding factor $t$.
+    Note that the random blinding factor guarantees \textit{issuer unlinkability}. User commitment $C$ will thus be
+    $g^{t}*Y_{L}^{client\_sk}$. Client will also produce a \textit{NIZKP} for its commitment.
+    In order to generate the challenge in a non-interactive way, we applied
     \textit{Fiat-Shamir Heuristic} to the \textit{sigma protocol} defined for
-    the \textit{Pedersen's Commitment PK}: the provided
-    challenge was the \textit{sha256} digest of the public parameters (the
+    the \textit{Pedersen's Commitment PK}.
+    The provided challenge was the \textit{sha256} digest of the public parameters (the
     commitment $C$, the randomness $R$ of the proof, and the public key
     parameters used for exponentiation, $g$ and $Y_{L}^{client\_sk}$)
     \item \textbf{Fiat-Shamir Heuristic for linking Disclosure Proof to
@@ -121,15 +123,14 @@ a correct run of the protocol and 4 runs where the client deviate from the
 protocol in different ways:
 \begin{itemize}
     \item \texttt{test\_registering\_invalid\_attributes}: client issues a
-    request with an attribute which do not belong to the agreed domain.
+    request with an attribute that does not belong to the agreed domain.
     \item \texttt{test\_requesting\_service\_not\_subscribed}: client tries to
     request a service to which it did not subscribe. Implicitly, this will lead
     to a \textit{Disclosure Proof} which is not valid for the given credentials.
     \item \texttt{test\_invalid\_signature\_on\_message}: simulates a passive
-    adversary who is able to eavesdrop communication between another user and
-    the server, trying to ask for a given service, from its current location, by
-    replaying the \textit{Disclosure Proof} sent by a client from a different
-    location.
+    adversary who is able to eavesdrop communication between a client and
+    the server, trying to ask for a given service, from its current location (which is different than that of the client), by
+    replaying the \textit{Disclosure Proof} it captured.
     \item \texttt{test\_invalid\_user\_commitment}: when creating the issue
     request, client presents a proof which is not valid for his commitment.
 \end{itemize}
@@ -210,7 +211,7 @@ combining with her background knowledge, the adversary can link users' IP addres
     each IP address, their daily trajectory (as a time-ordered sequence of
     latitude and longitude coordinates). We then computed the distance matrix
     between each pair of daily trajectories using \textit{Frechet Distance}. The
-    results showed that, for each users, trajectories were very similar.
+    results showed that, the trajectories of users taken from day to day tended to be very similar.
     Furthermore we could assess that \textit{Frechet Distance} represented a
     meaningful metric, since for each user we could witness a larger distance
     between trajectories collected during week days and trajectories collected
@@ -220,7 +221,7 @@ combining with her background knowledge, the adversary can link users' IP addres
 
     \begin{figure}[h!]
         \centering
-        \includegraphics[width=0.5\linewidth]{../privacy_evaluation/daily_trajectories/7.210.121.52-matrix.png}
+        \includegraphics[width=0.9\linewidth]{../privacy_evaluation/daily_trajectories/7.210.121.52-matrix.png}
         \caption{Distance Matrix of one user}
         \label{fig:matrix}
     \end{figure}
@@ -301,7 +302,7 @@ the same scenario of attack $1$. The following changes were made:
     labelled as "not noisy", then the algorithm proceeded as described. If no
     "not noisy" points were found, the adversary used the centroid of the
     "noise" cluster as prediction (since the noise added by the mechanism is
-    uniformly added along all directions, there is a probability that by
+    uniform along all directions. There is a probability that by
     averaging out the noise the adversary can find a good enough prediction).
 \end{itemize}
 As Privacy metric, we used a metric applied in the literature \cite{Shokri}, the
@@ -335,16 +336,29 @@ Loss introduced in the application.
 \section{Cell Fingerprinting via Network Traffic Analysis}
 
 \subsection{Implementation details}
+
 \subsubsection{Trace collection}
-//TO DO
+The trace collection was performed directly in the client docker container user Tshark.
+This was done to avoid external noise coming from other sources other than from the communication between the client and the Tor guard nodes.
+This was automated via a bash script called \texttt{generate\_traces.sh}. During the capture we noticed that the communication between
+the Tor exit Node and the server container sometimes failed and thus resulted in incomplete captured files. In order to fix this issue
+after each capture session we create a script called \texttt{repair\_failed\_runs.sh}. That scans each capture per cell and if the size of a capture file 
+is lower than a certain threshold then triggers a new capture for that specific cell trace.
+
+
 \subsubsection{Filtering}
 Before proceeding with feature extraction, we decided to apply two filters to the captured traces:
 \begin{itemize}
-    \item \textbf{Less than 609 B}: we analyzed the traffic between client and server, using Tor, when the client did not perform any request. We found out that packets were sent. Nevertheless, these packets were all below the size of $609B$. In particular, we have seen that at TLS level the frame size was $543 B$ , that appears to be standard for TLS application data sent inside single TOR cells.  For this reasons, we filtered out packets below this threshold when evesdropping client requests.
-    \item \textbf{Removed TCP ACKs}: Following an approach found in literature \cite{web_fingerprinting}, we decided to remove TCP ACKs sent by the server since they did not carry any payload.
+    \item \textbf{Less than 609 B}: we analyzed the traffic between client and server, using Tor, when the client did not perform any request.
+    We found out that packets were sent. Nevertheless, these packets were all below the size of $609B$.
+    In particular, we have seen that at TLS level the frame size was $543 B$ , that appears to be standard for TLS
+    application data sent inside single TOR cells.  For this reasons, we filtered out packets below this threshold when evesdropping client requests.
+    \item \textbf{Removed TCP ACKs}: Following an approach found in literature \cite{web_fingerprinting}, we decided to
+    remove TCP ACKs sent by the server since they did not carry any payload.
 \end{itemize}
 \subsubsection{Feature Extraction}
-In order to select a suitable set of features for the classification task, we tried to follow the features presented in the lecture notes, as well as in literature \cite{web_fingerprinting}:
+In order to select a suitable set of features for the classification task, we tried to follow the features presented in
+the lecture notes, as well as in literature \cite{web_fingerprinting}:
 \begin{itemize}
     \item 1 - Total number of packets.
     \item 2 - Number of incoming packets from server.
@@ -363,12 +377,19 @@ In order to select a suitable set of features for the classification task, we tr
     \item 22 Average time interval between incoming packets in nanoseconds.
 \end{itemize}
 \subsection{Evaluation}
-In order to perform the multi-label classification, we trained a \textit{Random Forest Classifier} provided by the \texttt{sklearn} library. In order to evaluate the performance of the classifier, we used the Exact Match Ratio metric. As validation method, we used a 10-fold stratified cross validation, and repeated the evaluation 5 times.
+In order to perform the multi-label classification, we trained a \textit{Random Forest Classifier} provided by the \texttt{sklearn} library.
+In order to evaluate the performance of the classifier, we used the Exact Match Ratio metric.
+As validation method, we used a 10-fold stratified cross validation, and repeated the evaluation 5 times.
 
 \subsection{Discussion and Countermeasures}
 The overall result of the model was very good, scoring an accuracy of $0.926$ with a standard deviation of $0.006$.
 The attack achieved good results even with less traces, scoring around $0.82$ accuracy with $0.02$ standard deviation with just 30 samples per cell.
-This very effective attack represents one of the limitation of Tor system. Nevertheless, it is possible to adopt some countermeasures in order to lower the success rate (i.e accuracy, in this case), of the attack. For example, one technique could be \textit{traffic morphing}. Since the classifier we built mainly relies on packets size and timing, \textit{SecretStroll} server could try to uniform data from all the cells, for example adding decoy POIs, in order to pad the response for every grid queried by the user such that they all have the same lenght. Furthermore, it could add some random delay between sending packets (at cost of latency), so to hide the peculiar timing for each cell response.
+This very effective attack represents one of the limitation of Tor system.
+Nevertheless, it is possible to adopt some countermeasures in order to lower the success rate (i.e accuracy, in this case), of the attack.
+For example, one technique could be \textit{traffic morphing}. Since the classifier we built mainly relies on packets size and timing,
+\textit{SecretStroll} server could try to uniform data from all the cells, for example adding decoy POIs, in order to pad
+the response for every grid queried by the user such that they all have the same lenght.
+Furthermore, it could add some random delay between sending packets (at cost of latency), so to hide the peculiar timing for each cell response.
 
 
 
