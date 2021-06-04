@@ -382,18 +382,16 @@ In order to perform the multi-label classification, we trained a \textit{Random 
 In order to evaluate the performance of the classifier, we used the Exact Match Ratio metric.
 As validation method, we used a 10-fold stratified cross validation, and repeated the evaluation 5 times, each time using  different randomness for the splits.
 
+
 \subsection{Discussion and Countermeasures}
 The overall result of the model was very good, scoring an accuracy of $0.926$ with a standard deviation of $0.006$.
 The attack achieved good results even with less traces, scoring around $0.82$ accuracy with $0.02$ standard deviation with just 30 samples per cell.
 This very effective attack represents one of the limitation of Tor system.
 Nevertheless, it is possible to adopt some countermeasures in order to lower the success rate (i.e accuracy, in this case), of the attack.
-For example, one technique could be \textit{traffic morphing}. Since the classifier we built mainly relies on packets size and timing,
+Since the classifier we built mainly relies on packets size and timing,
 \textit{SecretStroll} server could try to uniform data from all the cells, for example adding decoy POIs, in order to pad
-the response for every grid queried by the user such that they all have the same lenght.
-Furthermore, it could add some random delay between sending packets (at cost of latency), so to hide the peculiar timing for each cell response.
-
-
-
+the response for every grid queried by the user such that they all have the same length.
+Furthermore, it could add some random delay between sending packets (at cost of latency), so to hide the peculiar timing for each cell response, or even make sure to send, for each cell, all packets with fixed time intervals.
 \printbibliography
 
 \end{document}
