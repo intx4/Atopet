@@ -119,7 +119,7 @@ development of the \textit{ABC} system, some design challenges needed to be solv
 \subsection{Test}
 In order to test the correctness of our \textit{ABC protocol}, we implemented a
 simple test suite using \texttt{pytest} called \texttt{test\_abc.py}, involving
-a correct run of the protocol and 4 runs where the client deviate from the
+a correct run of the protocol and 4 runs where clients deviate from the
 protocol in different ways:
 \begin{itemize}
     \item \texttt{test\_registering\_invalid\_attributes}: client issues a
@@ -127,9 +127,9 @@ protocol in different ways:
     \item \texttt{test\_requesting\_service\_not\_subscribed}: client tries to
     request a service to which it did not subscribe. Implicitly, this will lead
     to a \textit{Disclosure Proof} which is not valid for the given credentials.
-    \item \texttt{test\_invalid\_signature\_on\_message}: simulates a passive
-    adversary who is able to eavesdrop communication between a client and
-    the server, trying to ask for a given service, from its current location (which is different than that of the client), by
+    \item \texttt{test\_invalid\_signature\_on\_message}: it simulates an active
+    adversary who is able to eavesdrop the communication between a client and
+    the server. The adversary will try to ask for the same service requested by the user, from its current location (which is different than that of the client), by
     replaying the \textit{Disclosure Proof} it captured.
     \item \texttt{test\_invalid\_user\_commitment}: when creating the issue
     request, client presents a proof which is not valid for his commitment.
@@ -138,7 +138,8 @@ protocol in different ways:
 \subsection{Evaluation}
 For the evaluation of the \textit{ABC protocol}, we analyzed how the
 communication cost in terms of exchanged bytes, and the computational cost in
-terms of runtime, variate in respect to the number of available subscriptions:
+terms of runtime, variate in respect to the number of available subscriptions.
+Each measurement was repeated 20 times. The plots show also the standard error as error bars (where they are not visible, the error was too low):
 \begin{figure}[h!]
     \includegraphics[width=0.4\linewidth]{../performance_analysis/dataflow_keygen.png}
     \includegraphics[width=0.4\linewidth]{../performance_analysis/runtime_keygen.png}
