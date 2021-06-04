@@ -17,7 +17,6 @@ the functions provided to resemble a more object-oriented interface.
 
 from typing import List, Tuple
 from petrelic.multiplicative.pairing import G1, G2, GT, G1Element, G2Element, GTElement
-#from ordered_set import OrderedSet
 import hashlib
 
 from collections import OrderedDict

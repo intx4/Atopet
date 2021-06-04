@@ -131,7 +131,7 @@ class Client:
         
     def process_registration_response(
             self,
-            server_pk: bytes, #useless
+            server_pk: bytes,
             server_response: bytes,
             private_state: dict
         ) -> bytes:
