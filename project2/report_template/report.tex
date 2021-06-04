@@ -191,8 +191,7 @@ We assumed the adversary computational power to be bounded by Polynomial time.
 
 \paragraph{Adversarial Goal}
 The goal of the adversary is to infer users' \textbf{top-3 locations}, namely
-their home location, their workplace location, and any particular place where
-they spend their leisure time. By knowing such sensible information and
+their home location, their workplace location, and lastly the place where they shop. By knowing such sensible information and
 combining with her background knowledge, the adversary can uniquely identify
 users.
 
@@ -202,7 +201,7 @@ users.
     \item \textbf{Feature Extraction}: the first step for performing the attack
     was a simple process of feature extraction. We added 4 new columns to the
     \textit{queries.csv} dataset from the \textit{timestamp} column:
-    \textit{cell_id} column, \textit{hour} column (hour granularity),
+    \textit{cell\_id} column, \textit{hour} column (hour granularity),
     \textit{day} column (from day $1$ to $20$) and \textit{daytime}
     column (it represents when the query was made during the day. For example, a query launched
     at 10 a.m was labelled as "Morning").
