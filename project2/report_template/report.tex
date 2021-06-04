@@ -222,7 +222,7 @@ combining with her background knowledge, the adversary can link users' IP addres
     \begin{figure}[h!]
         \centering
         \includegraphics[width=0.9\linewidth]{../privacy_evaluation/daily_trajectories/7.210.121.52-matrix.png}
-        \caption{Distance Matrix of one user}
+        \caption{Distance Matrix of user 7.210.121.52}
         \label{fig:matrix}
     \end{figure}
 
@@ -338,14 +338,14 @@ Loss introduced in the application.
 \subsection{Implementation details}
 
 \subsubsection{Trace collection}
-The trace collection was performed directly in the client docker container user Tshark.
+The trace collection was performed directly in the client docker container using Tshark.
 This was done to avoid external noise coming from other sources other than from the communication between the client and the Tor guard nodes.
-This was automated via a bash script called \texttt{generate\_traces.sh}. During the capture we noticed that the communication between
-the Tor exit Node and the server container sometimes failed and thus resulted in incomplete captured files. In order to fix this issue
-after each capture session we create a script called \texttt{repair\_failed\_runs.sh}. That scans each capture per cell and if the size of a capture file 
-is lower than a certain threshold then triggers a new capture for that specific cell trace. Overall two runs of traces
-were collected one with 30 traces per cell, and another one with 148 entries per traces.
-
+This was automated via a bash script called \texttt{generate\_traces.sh}. During the capture, we noticed that the communication between
+the Tor exit Node and the server container was affected by random failures, resulting in incomplete \texttt{.pcap} files. In order to fix this issue,
+ we created a bash script called \texttt{repair\_failed\_runs.sh}. The script scans each capture file, for each cell folder, and if the size of a capture file
+is lower than a certain threshold ,it triggers a new capture for that specific trace and cell. Overall two runs of traces
+were collected, one with 30 traces per cell, and another one with 148 entries per traces.
+The traces simulated a user with 5 subscriptions, and every query was made using a combination of the subscriptions, i.e $\binom{5}{k}$ for $k$ \in $[1,5]$.
 
 \subsubsection{Filtering}
 Before proceeding with feature extraction, we decided to apply two filters to the captured traces:
