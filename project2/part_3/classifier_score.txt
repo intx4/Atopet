@@ -1,0 +1,1 @@
+Avg Exact match ratio: 0.9265009074642946. Std: 0.006363577948990703. Entries 14773. Epochs: 50

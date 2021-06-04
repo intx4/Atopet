@@ -1,0 +1,14 @@
+Flask
+Flask-SQLAlchemy
+jsonpickle
+petrelic
+PySocks
+pylint
+pytest
+requests
+hashlib
+ordered_set
+pandas
+numpy
+matplotlib
+sklearn

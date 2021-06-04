@@ -16,8 +16,17 @@ class ABC:
         
 class Server:
     """Server"""
+    #PUBLIC_KEY = PublicKey
+    #SECRET_KEY = SecretKey
     def __init__(self):
-        pass
+        """
+        Server constructor.
+        """
+
+        #if PUBLIC_KEY is None or SECRET_KEY is None:
+            #raise ValueError("Public or Secret ye not set")
+        #Server.PUBLIC_KEY = PUBLIC_KEY
+        #Server.SECRET_KEY = SECRET_KEY
 
     @staticmethod
     def generate_ca(
